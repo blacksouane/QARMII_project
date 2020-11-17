@@ -1,0 +1,14 @@
+TODO GUI
+
+Doesn't actually work. 
+
+1. Create Function for it
+	-> We already have the signal
+	-> We compute weights when necessary
+	-> Compute Leverage
+
+
+2. Give better input with same size
+
+3. Insch'Allah it works
+
