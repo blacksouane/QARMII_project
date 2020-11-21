@@ -5,7 +5,6 @@ start = Model.day;
 data = data(start+127:end,:); % initially +1
 M = 90;
 position = 1;
-disp(size(data));
 [T, A] = size(data);
 
 % Find for available data
@@ -37,6 +36,7 @@ else % equally weighted
 W(position, Ind) = 1/sum(available);  
 
 end
+
 % Compute Signal
 [S(position, Ind)] = SVM_Signal(data(time-M:time-1,Ind),Model.Model, C, F); % enlever le time-m+1 et ajouter -1
 
@@ -49,4 +49,3 @@ end
 
 
 end
-

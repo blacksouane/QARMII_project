@@ -21,12 +21,14 @@ function [sigma_pred,reg_predict] = GARCH_reg_predict(ret_asset,length_reg,lengt
 
 %% GARCH + return prediction 
 if nargin > 4
-   X = zeros(length_reg,3);
+    %allocate memory
+    X = zeros(length_reg,3);
     Y = zeros(length_reg,1);
     coeff_reg = zeros(length(ret_asset)-length_reg-length_bear-1,4);
     reg_predict = zeros(length(ret_asset)-length_reg-length_bear-1,1);
     pred = zeros(days_predictvola,1);
-    sigma_pred = zeros(length(ret_asset)-length_reg-length_bear-1,1); 
+    sigma_pred = zeros(length(ret_asset)-length_reg-length_bear-1,1);
+    
     for u=1:length(ret_asset)-length_reg-length_bear-1
         for i=u:length_reg+u-1
             past_ret = prod(1+RM(i:i+length_bear-1))-1;
@@ -35,8 +37,8 @@ if nargin > 4
                 X(i,1) = 1;
             end 
             X(i,2) = var(RM(length_bear-length_pastvola+i:length_bear+i-1));
-            Y(i,1) = ret_asset(length_bear+i);
             X(i,3) = X(i,2)*X(i,1);
+            Y(i,1) = ret_asset(length_bear+i);
         end
         model1 = fitlm(X,Y);
         coeff_reg(u,:) = model1.Coefficients.Estimate;

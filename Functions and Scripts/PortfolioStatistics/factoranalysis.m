@@ -68,5 +68,7 @@ clear model1
 sumtable2 = array2table(sumtable2,'VariableNames',Names2,'RowNames',...
     {'Coefficient AF','pValue AF'});
 
+
+
 end
 

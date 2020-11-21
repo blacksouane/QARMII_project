@@ -56,7 +56,7 @@ for i = 1:length(availablity)
     class(i,3) = sum(availablity(i,10:14)) ;
     class(i,4) = sum(availablity(i,15:18)) ;
 end
-%MatColor2 = [0.6350,0.0780,0.1840;0.4660,0.6740,0.1880;0.9290,0.6940,0.1250;0.8500,0.3250,0.0980;0,0.4470,0.7410];
+
 f = figure('visible','off');
 area(data.date, class);
 title('Availability of assets')
@@ -71,6 +71,11 @@ set(gcf,'position',[x0,y0,width,height])
 legend('Equity', 'Currencies', 'Commodities', 'Fixed Income','Location','bestoutside','Orientation','horizontal')
 print(f,'Output/Availability', '-dpng', '-r1000')
 clear availablity class f
+
+for i=1:18
+    plotprice(data.p(:,i),data.names(i), data.date)
+end
+
 
 RWML = data.fffactor.daily(:,6)-data.rf.daily; %Momentum FamaFrench (Excess Return)
 RM = data.fffactor.daily(:,1); %Market (Excess Return)
@@ -337,18 +342,7 @@ clear f;
 
 %% Model statistics
 %table will all statistics
-Model1_stats = [renamevars(MOM252VP.Stats,'Var1','MOM252VP'),...
-    renamevars(MOM252RP.Stats,'Var1','MOM252RP'),...
-    renamevars(MOM252EW.Stats,'Var1','MOM252EW'),...
-    renamevars(MOM90VP.Stats,'Var1','MOM90VP'),...
-    renamevars(MOM90RP.Stats,'Var1','MOM90RP'),...
-    renamevars(MOM90EW.Stats,'Var1','MOM90EW'),...
-    renamevars(MAVP.Stats,'Var1','MAVP'),...
-    renamevars(MARP.Stats,'Var1','MARP'),...
-    renamevars(MAEW.Stats,'Var1','MAEW'),...
-    renamevars(MOMJUMPVP.Stats,'Var1','MOMJUMPVP'),...
-    renamevars(MOMJUMPRP.Stats,'Var1','MOMJUMPRP'),...
-    renamevars(MOMJUMPEW.Stats,'Var1','MOMJUMPEW')];
+T
 
 %All Signal with VP
 
@@ -436,14 +430,15 @@ clear f;
 
 %% SSA
 
-SSA.MomLength = 90;
+SSA.MomLength = 45;
+SSA.LatentDim = 1;
 data.monthly = MonthlyReturns(data.daily,SSA.MomLength, 21);
 data.Mdate = Date(data.daily,data.date ,SSA.MomLength, 21);
 
 % we use Singular spectrum analysis to extract a signal
 disp('*************************** SSA - Volatility Parity**************************\n')
 % Improved signal and Trend quantity tracking
-[SSA.W,SSA.S,SSA.L] = SSA_TF(data.p, data.daily, 60, 10, SSA.MomLength, 60, 'Target', 0.1);
+[SSA.W,SSA.S,SSA.L] = SSA_TF(data.p, data.daily, SSA.LatentDim, SSA.MomLength, 'Target', 0.1);
 SSA.NW = SSA.W.*SSA.S;
 [SSA.R,SSA.CumR,SSA.Stats] = PortfolioStatistics(data.monthly,...
     SSA.NW(2:end,:),SSA.L(2:end),0.001);
@@ -454,7 +449,7 @@ SSA.NW = SSA.W.*SSA.S;
 
 disp('*************************** SSA - Signal Quantity **************************\n')
 % Improved signal and Trend quantity tracking
-[SSA_Quantity.W,SSA_Quantity.S,SSA_Quantity.L] = SSA_TF(data.p, data.daily, 60, 10, SSA.MomLength, 60, 'Quantity', 0.5, 0.1);
+[SSA_Quantity.W,SSA_Quantity.S,SSA_Quantity.L] = SSA_TF(data.p, data.daily, SSA.LatentDim, SSA.MomLength, 'Quantity', 0.5, 0.1);
 SSA_Quantity.NW = SSA_Quantity.W.*SSA_Quantity.S;
 [SSA_Quantity.R,SSA_Quantity.CumR,SSA_Quantity.Stats] = PortfolioStatistics(data.monthly,...
     SSA_Quantity.NW(2:end,:),SSA_Quantity.L(2:end),0.001);
@@ -465,10 +460,10 @@ SSA_Quantity.NW = SSA_Quantity.W.*SSA_Quantity.S;
 
 disp('*************************** SSA - Individual Trend Quantity **************************\n')
 % Improved signal and Trend quantity tracking
-[SSA_IndQuantity.W,SSA_IndQuantity.S,SSA_IndQuantity.L] = SSA_TF(data.p, data.daily, 60, 10, SSA.MomLength, 60, 'IndQuantity', 0.5,0.1);
+[SSA_IndQuantity.W,SSA_IndQuantity.S,SSA_IndQuantity.L] = SSA_TF(data.p, data.daily, SSA.LatentDim, SSA.MomLength, 'IndQuantity', 0.5,0.1);
 SSA_IndQuantity.NW = SSA_IndQuantity.W.*SSA_IndQuantity.S;
 [SSA_IndQuantity.R,SSA_IndQuantity.CumR,SSA_IndQuantity.Stats] = PortfolioStatistics(data.monthly,...
-    SSA_IndQuantity.NW(2:end,:),SSA_IndQuantity.L(2:end),0,001);
+    SSA_IndQuantity.NW(2:end,:),SSA_IndQuantity.L(2:end),0.001);
 [SSA_IndQuantity.CorrelationAnalysis] = SharpeCorrelation(SSA_IndQuantity.R, data.monthly, 36,...
     [0 ,0.1, 0.2], data.classNum);
 [SSA_IndQuantity.FACTOR, SSA_IndQuantity.AFACTOR] = factoranalysis(SSA_IndQuantity.R,data.fffactor.monthly, data.rf.monthly,...
@@ -476,9 +471,9 @@ SSA_IndQuantity.NW = SSA_IndQuantity.W.*SSA_IndQuantity.S;
 
 % Plotting the results
 f = figure('visible','off');
-plot(data.Mdate(2:end), SSA.CumR,...
-    data.Mdate(2:end), SSA_Quantity.CumR,...
-    data.Mdate(2:end), SSA_IndQuantity.CumR);
+plot(data.Mdate(end-length(SSA.CumR)+1:end), SSA.CumR,...
+    data.Mdate(end-length(SSA.CumR)+1:end), SSA_Quantity.CumR,...
+    data.Mdate(end-length(SSA.CumR)+1:end), SSA_IndQuantity.CumR);
 legend('SSA','SSA Trend Quantity','SSA Ind. Trend Quantity','location','northwest');
 title('SSA signal at constant volatilty')
 ylabel('Cumulative return')
@@ -489,7 +484,7 @@ clear f;
 
 %% Support vector machine
 
-SVM_Model; % Lauching the model 
+SVM_Model; % Lauching the model  pok
 
 % Volatility Parity
 [SVM_MODEL.W, SVM_MODEL.S, SVM_MODEL.L] = SVM_Strategy(data.daily, 90, SVM_MODEL, data.classNum, 0.2,'VolParity');
@@ -514,6 +509,7 @@ SVM_MODEL_Risk.NW = SVM_MODEL_Risk.W.*SVM_MODEL_Risk.S;
 % Equally Weighted
 [SVM_MODEL_EW.W, SVM_MODEL_EW.S, SVM_MODEL_EW.L] = SVM_Strategy(data.daily, 90, SVM_MODEL, data.classNum, 0.2,'EW');
 SVM_MODEL_EW.NW = SVM_MODEL_EW.W.*SVM_MODEL_EW.S;
+
 [SVM_MODEL_EW.R, SVM_MODEL_EW.CumR, SVM_MODEL_EW.Stats] = PortfolioStatistics(data.monthly(end-length(SVM_MODEL_EW.S)+1:end,:),...
     SVM_MODEL_EW.NW,SVM_MODEL_EW.L.',0.001);
 [SVM_MODEL_EW.FACTOR, SVM_MODEL_EW.AFACTOR] = factoranalysis(SVM_MODEL_EW.R,data.fffactor.monthly, data.rf.monthly,...
@@ -539,10 +535,6 @@ Ensemble.start = length(SVM_MODEL_Risk.CumR) - 1;  %Smaller Model
 Ensemble.CorrEstim = 12; % We estimate 1 year correlation
 Ensemble.Corr = corr(SVM_MODEL_Risk.CumR(1:Ensemble.CorrEstim), MBBSEW.CumR(end-Ensemble.start:end - Ensemble.start+Ensemble.CorrEstim-1));
 
-
-
-
-
 %% Risk parity Inter
 [RPI.W, RPI.S, RPI.L] = RP_A(data.daily, 90, 90, 0.1, data.classNum);
 RPI.NW = RPI.W.*RPI.S;
@@ -550,14 +542,39 @@ RPI.NW = RPI.W.*RPI.S;
     RPI.NW,RPI.L');
 %}
 
+%% Sensitivity Analysis
+
+% Sensitivity MBBS
+MBBS__Sensitivity;
+
+% Sensitivity SSA
+SSA_Sensitivity;
+
+% Sensitivity SVM
+SVM_Sensitivity;
+
 %% Creating tables, GUI and clearing cache
 
 % Creating tables
 creatingtables;
-
+% SG trend index barcaly en plus HFR macro systemic 
 % GUI
 Data_APP;
 GUI; % TODO : StartUpFcn -> Data loading before component creation
 
+AREAWEIGHTS(SSA_IndQuantity.S, data.classNum,...
+    data.Mdate,'Output/SVM_W',...
+    'Weights SSA Volatility Parity (Ind. Quantity trading rule)', ...
+    data.class)
+
+plotSIGNAL(SVM_MODEL_Risk.S, data.classNum,...
+    data.Mdate,'Output/SVM_S',...
+    'SVM Signal Decomposition', ...
+    data.class)
+plotSIGNAL(MBBSEW.S,data.classNum,...
+    data.Mdate(9:end),'Output/SVM_S',...
+    'SVM Signal Decomposition', ...
+    data.class)
+
 % Clear Temporary Variables
-clear MomLength height i asset A N position TF 700 x0 y0 width
+clear height i asset A N position TF 700 x0 y0 width

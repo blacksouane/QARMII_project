@@ -12,7 +12,7 @@ position = 1;
 
 for i = LengthSignal+1:LengthMonth:(length(Returns)-LengthMonth)
     for j = 1:asset
-    MonthReturn(position,j) = prod(Returns(i+2:i+LengthMonth-1,j))-1; % add +2 because we take +2 return of the month to compute the signal 
+    MonthReturn(position,j) = prod(Returns(i+2:i+LengthMonth-1,j))-1; 
     end
     position = position + 1;
 end
