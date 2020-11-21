@@ -342,7 +342,7 @@ clear f;
 
 %% Model statistics
 %table will all statistics
-T
+
 
 %All Signal with VP
 
@@ -575,6 +575,12 @@ plotSIGNAL(MBBSEW.S,data.classNum,...
     data.Mdate(9:end),'Output/SVM_S',...
     'SVM Signal Decomposition', ...
     data.class)
+
+plotSIGNAL(MOM252VP.S,data.classNum,...
+    data.Mdate(9:end),'Output/MOM252_s',...
+    'MOM252 Signal Decomposition', ...
+    data.class)
+
 
 % Clear Temporary Variables
 clear height i asset A N position TF 700 x0 y0 width
