@@ -15,70 +15,7 @@ addpath(genpath('Kevin Sheppard Toolbox'))
 clear RESTOREDEFAULTPATH_EXECUTED
 MomLength = 252;
 ImportData;
-
-% Converting foreign prices in usd prices by using the forex exchange in the dataset
-data.p(:,2) = data.p(:,2).*data.p(:,9); % correct the nikkei position
-data.p(:,4) = data.p(:,4).*data.p(:,8); % correct the eurostoxx position
-data.p(:,5) = data.p(:,5).*data.p(:,7); % correction de SMI position
-data.p(:,16) = data.p(:,16).*data.p(:,9); % correct the yen bond position
-data.p(:,17) = data.p(:,17).*data.p(:,8); % correct the euro bond position
-data.p(:,18) = data.p(:,18).*data.p(:,6); % correct the pound bond position
-
-% Creating asset classes and reconstructing names
-data.Temp = strings(size(data.names));
-for asset = 1:18
-    data.Temp(1, asset) = convertCharsToStrings(data.names{1,asset});
-end
-data.class=strings(size(data.names));
-data.class(1:5) = 'Equity';
-data.class(6:9) = 'Fx';
-data.class(10:14) = 'Commo';
-data.class(15:18) = 'FI';
-data.names = data.Temp;
-data.classNum = zeros(size(data.names));
-data.classNum(data.class == 'Equity') = 1;
-data.classNum(data.class == 'Fx') = 2;
-data.classNum(data.class == 'Commo') = 3;
-data.classNum(data.class == 'FI') = 4;
-clear data.Temp
-
-[data.daily, data.first] = ReturnNaN(data.p);
-data.monthly = MonthlyReturns(data.daily, MomLength, 21);
-data.Mdate = Date(data.daily,data.date ,MomLength, 21);
-
-% plot the available asset
-availablity = isfinite(data.p);
-class = zeros(length(availablity),4);
-
-for i = 1:length(availablity)
-    class(i,1) = sum(availablity(i,1:5)) ;
-    class(i,2) = sum(availablity(i,6:9)) ;
-    class(i,3) = sum(availablity(i,10:14)) ;
-    class(i,4) = sum(availablity(i,15:18)) ;
-end
-
-f = figure('visible','off');
-area(data.date, class);
-title('Availability of assets')
-xlabel('Years')
-ylabel('Number of available assets')
-ylim([0 18])
-x0=10;
-y0=10;
-width=700;
-height=400;
-set(gcf,'position',[x0,y0,width,height])
-legend('Equity', 'Currencies', 'Commodities', 'Fixed Income','Location','bestoutside','Orientation','horizontal')
-print(f,'Output/Availability', '-dpng', '-r1000')
-clear availablity class f
-
-for i=1:18
-    plotprice(data.p(:,i),data.names(i), data.date)
-end
-
-
-RWML = data.fffactor.daily(:,6)-data.rf.daily; %Momentum FamaFrench (Excess Return)
-RM = data.fffactor.daily(:,1); %Market (Excess Return)
+DataProcessing;
 
 disp('####################################################################');
 disp('-------------------------- Model 1 ---------------------------------');
@@ -130,7 +67,7 @@ MOM252RP.NW = MOM252RP.W.*MOM252RP.S;
 
 
 % Plotting the results
-f = figure('visible','off');
+f = figure('visible','on');
 plot(data.Mdate, MOM252EW.CumR,data.Mdate,MOM252VP.CumR,data.Mdate,MOM252RP.CumR);
 legend('Equal Weighted', 'Volatility Parity','Risk Parity','location',...
     'northwest');
@@ -189,7 +126,7 @@ MOM90RP.NW = MOM90RP.W.*MOM90RP.S;
     data.AF.monthly.r);
 
 % Plotting the results
-f = figure('visible','off');
+f = figure('visible','on');
 plot(data.Mdate, MOM90EW.CumR,...
     data.Mdate,MOM90VP.CumR,...
     data.Mdate,MOM90RP.CumR);
@@ -201,24 +138,6 @@ xlabel('date')
 print(f,'Output/MOM90', '-dpng', '-r1000')
 clear f;
 
-%{
-%Weight allocation
-f = figure('visible','off');
-area(abs(MOM90RP.W)./sum(abs(MOM90RP.W),2))
-colormap winter
-x0=10;
-y0=10;
-width=700;
-height=400;
-set(gcf,'position',[x0,y0,width,height])
-%legend('Energy', 'Fixed Income', 'Commodities', 'Equities', 'Currencies','Location','bestoutside','Orientation','horizontal')
-title('Repartition of weights through asset classes - Vol. Parity')
-xlabel('Years')
-ylabel('Weights')
-ylim([0 1])
-print(f,'Output/VolatilityParityWeights', '-dpng', '-r1000')
-clear f x0 y0 width height
-%}
 %% Momemtum 90 days JUMP
 
 disp('*************************** MOMEMTUM JUMP 90 DAYS **************************\n')
@@ -269,7 +188,7 @@ MOMJUMPRP.NW = MOMJUMPRP.W.*MOMJUMPRP.S;
     data.AF.monthly.r);
 
 % Plotting the results
-f = figure('visible','off');
+f = figure('visible','on');
 plot(data.Mdate, MOMJUMPEW.CumR,...
     data.Mdate,MOMJUMPVP.CumR,...
     data.Mdate,MOMJUMPRP.CumR);
@@ -330,7 +249,7 @@ MARP.NW = MARP.W.*MARP.S; %Weights are already Net
     data.AF.monthly.r);
 
 % Plotting the results
-f = figure('visible','off');
+f = figure('visible','on');
 plot(data.Mdate, MAEW.CumR,data.Mdate,MAVP.CumR,data.Mdate,MARP.CumR);
 legend('Equal Weighted', 'Volatility Parity','Risk Parity','location',...
     'northwest');
@@ -342,6 +261,18 @@ clear f;
 
 %% Model statistics
 %table will all statistics
+Model1_stats = [renamevars(MOM252VP.Stats,'Var1','MOM252VP'),...
+    renamevars(MOM252RP.Stats,'Var1','MOM252RP'),...
+    renamevars(MOM252EW.Stats,'Var1','MOM252EW'),...
+    renamevars(MOM90VP.Stats,'Var1','MOM90VP'),...
+    renamevars(MOM90RP.Stats,'Var1','MOM90RP'),...
+    renamevars(MOM90EW.Stats,'Var1','MOM90EW'),...
+    renamevars(MOMJUMPVP.Stats,'Var1','MOMJUMPVP'),...
+    renamevars(MOMJUMPRP.Stats,'Var1','MOMJUMPRP'),...
+    renamevars(MOMJUMPEW.Stats,'Var1','MOMJUMPEW'),...
+    renamevars(MAVP.Stats,'Var1','MAVP'),...
+    renamevars(MARP.Stats,'Var1','MARP'),...
+    renamevars(MAEW.Stats,'Var1','MAEW')];
 
 
 %All Signal with VP
@@ -382,18 +313,6 @@ MBBS3.Sharpe = SharpeRatio(MBBS3.R, 0.01); % OK
 [MBBS3.FACTOR, MBBS3.AFACTOR] = factoranalysis(MBBS3.R,data.fffactor.monthly, data.rf.monthly,...
     data.AF.monthly.r);
 
-%{
-figure()
-yyaxis left
-plot(movstd(MBBSLeverage.R, 24))
-yyaxis right
-plot(MBBSLeverage.CumR)
-[MBBS3.R,MBBS3.CumR,MBBS3.Stats] = PortfolioStatistics(data.monthly(5:end,:),...
-    MBBS3.NW,MBBS3.L,0.001);
-[MBBS3.CorrelationAnalysis] = SharpeCorrelation(MBBS3.R, data.monthly, 36,...
-    [0 ,0.1, 0.2], data.classNum);
-%}
-
 disp('*************************** Individual Trend Quantity **************************\n')
 % Improved signal and Trend quantity tracking
 [MBBS2.W,MBBS2.S,MBBS2.L] = MODEL_MBBS(data.p, data.daily, 90, 20, 200, 63, 252, 'IndQuantity', 0.5,0.1);
@@ -417,7 +336,7 @@ MBBSEW.NW = MBBSEW.W.*MBBSEW.S;
     data.AF.monthly.r);
 
 % Plotting the results
-f = figure('visible','off');
+f = figure('visible','on');
 plot(data.Mdate(11:end),MBBS2.CumR,data.Mdate(11:end),MBBSLeverage.CumR...
     ,data.Mdate(11:end), MBBSEW.CumR,data.Mdate(11:end),MBBS3.CumR);
 legend('Vol.Parity Ind.Quantity','Vol.Parity Quantity','EW Quantity','Forecast','location',...
@@ -427,6 +346,10 @@ ylabel('Cumulative return')
 xlabel('date')
 print(f,'Output/MBBS', '-dpng', '-r1000')
 clear f;
+
+MBBS_stats = [renamevars(MBBS2.Stats,'Var1','Vol.Parity Ind.Quantity'),...
+    renamevars(MBBSLeverage.Stats,'Var1','Vol.Parity Quantity'),...
+    renamevars(MBBSEW.Stats,'Var1','EW Quantity')];
 
 %% SSA
 
@@ -438,7 +361,8 @@ data.Mdate = Date(data.daily,data.date ,SSA.MomLength, 21);
 % we use Singular spectrum analysis to extract a signal
 disp('*************************** SSA - Volatility Parity**************************\n')
 % Improved signal and Trend quantity tracking
-[SSA.W,SSA.S,SSA.L] = SSA_TF(data.p, data.daily, SSA.LatentDim, SSA.MomLength, 'Target', 0.1);
+[SSA.W,SSA.S,SSA.L] = SSA_TF(data.p, data.daily, SSA.LatentDim,...
+    SSA.MomLength, 'weight', 'volParity', 'tradingRule', 'noRule', 'volTarget', 0.1);
 SSA.NW = SSA.W.*SSA.S;
 [SSA.R,SSA.CumR,SSA.Stats] = PortfolioStatistics(data.monthly,...
     SSA.NW(2:end,:),SSA.L(2:end),0.001);
@@ -447,9 +371,36 @@ SSA.NW = SSA.W.*SSA.S;
 [SSA.FACTOR, SSA.AFACTOR] = factoranalysis(SSA.R,data.fffactor.monthly, data.rf.monthly,...
     data.AF.monthly.r);
 
-disp('*************************** SSA - Signal Quantity **************************\n')
+disp('*************************** SSA - Risk Parity **************************\n')
 % Improved signal and Trend quantity tracking
-[SSA_Quantity.W,SSA_Quantity.S,SSA_Quantity.L] = SSA_TF(data.p, data.daily, SSA.LatentDim, SSA.MomLength, 'Quantity', 0.5, 0.1);
+[SSA_RP.W,SSA_RP.S,SSA_RP.L] = SSA_TF(data.p, data.daily, SSA.LatentDim, ...
+    SSA.MomLength, 'weight', 'riskParity', 'tradingRule', 'noRule', 'volTarget', 0.1);
+SSA_RP.NW = SSA_RP.W.*SSA_RP.S;
+[SSA_RP.R,SSA_RP.CumR,SSA_RP.Stats] = PortfolioStatistics(data.monthly,...
+    SSA_RP.NW(2:end,:),SSA_RP.L(2:end),0.001);
+[SSA_RP.CorrelationAnalysis] = SharpeCorrelation(SSA_RP.R, data.monthly, 36,...
+    [0 ,0.1, 0.2], data.classNum);
+[SSA_RP.FACTOR, SSA_RP.AFACTOR] = factoranalysis(SSA_RP.R,data.fffactor.monthly, data.rf.monthly,...
+    data.AF.monthly.r);
+
+disp('*************************** SSA - EW **************************\n')
+% Improved signal and Trend quantity tracking
+[SSA_EW.W,SSA_EW.S,SSA_EW.L] = SSA_TF(data.p, data.daily, SSA.LatentDim, ...
+    SSA.MomLength, 'weight', 'EW', 'tradingRule', 'noRule', 'volTarget', 0.1);
+SSA_EW.NW = SSA_EW.W.*SSA_EW.S;
+[SSA_EW.R,SSA_EW.CumR,SSA_EW.Stats] = PortfolioStatistics(data.monthly,...
+    SSA_EW.NW(2:end,:),SSA_EW.L(2:end),0.001);
+[SSA_EW.CorrelationAnalysis] = SharpeCorrelation(SSA_EW.R, data.monthly, 36,...
+    [0 ,0.1, 0.2], data.classNum);
+[SSA_EW.FACTOR, SSA_EW.AFACTOR] = factoranalysis(SSA_EW.R,data.fffactor.monthly, data.rf.monthly,...
+    data.AF.monthly.r);
+
+disp('*************************** SSA - Quantity **************************\n')
+% Improved signal and Trend quantity tracking
+[SSA_Quantity.W,SSA_Quantity.S,SSA_Quantity.L] = SSA_TF(data.p, data.daily,...
+    SSA.LatentDim, SSA.MomLength,...
+     'weight', 'volParity', 'tradingRule', 'overQuantity', 'tradingTarget',...
+     0.5,'volTarget', 0.1);
 SSA_Quantity.NW = SSA_Quantity.W.*SSA_Quantity.S;
 [SSA_Quantity.R,SSA_Quantity.CumR,SSA_Quantity.Stats] = PortfolioStatistics(data.monthly,...
     SSA_Quantity.NW(2:end,:),SSA_Quantity.L(2:end),0.001);
@@ -460,7 +411,10 @@ SSA_Quantity.NW = SSA_Quantity.W.*SSA_Quantity.S;
 
 disp('*************************** SSA - Individual Trend Quantity **************************\n')
 % Improved signal and Trend quantity tracking
-[SSA_IndQuantity.W,SSA_IndQuantity.S,SSA_IndQuantity.L] = SSA_TF(data.p, data.daily, SSA.LatentDim, SSA.MomLength, 'IndQuantity', 0.5,0.1);
+[SSA_IndQuantity.W,SSA_IndQuantity.S,SSA_IndQuantity.L] = SSA_TF(data.p, data.daily,...
+    SSA.LatentDim, SSA.MomLength,...
+     'weight', 'volParity', 'tradingRule', 'indQuantity', 'tradingTarget',...
+     0.5,'volTarget', 0.1);
 SSA_IndQuantity.NW = SSA_IndQuantity.W.*SSA_IndQuantity.S;
 [SSA_IndQuantity.R,SSA_IndQuantity.CumR,SSA_IndQuantity.Stats] = PortfolioStatistics(data.monthly,...
     SSA_IndQuantity.NW(2:end,:),SSA_IndQuantity.L(2:end),0.001);
@@ -470,11 +424,15 @@ SSA_IndQuantity.NW = SSA_IndQuantity.W.*SSA_IndQuantity.S;
     data.AF.monthly.r);
 
 % Plotting the results
-f = figure('visible','off');
+f = figure('visible','on');
 plot(data.Mdate(end-length(SSA.CumR)+1:end), SSA.CumR,...
     data.Mdate(end-length(SSA.CumR)+1:end), SSA_Quantity.CumR,...
-    data.Mdate(end-length(SSA.CumR)+1:end), SSA_IndQuantity.CumR);
-legend('SSA','SSA Trend Quantity','SSA Ind. Trend Quantity','location','northwest');
+    data.Mdate(end-length(SSA.CumR)+1:end), SSA_IndQuantity.CumR, ...
+    data.Mdate(end-length(SSA.CumR)+1:end), SSA_RP.CumR,...
+    data.Mdate(end-length(SSA.CumR)+1:end), SSA_EW.CumR);
+legend('SSA Volatility Parity','SSA Volatility Parity + Overall Trend',...
+    'SSA Volatility Parity + Individual Trend','SSA Risk Parity'...
+    ,'SSA Equal Weighted','location','northwest');
 title('SSA signal at constant volatilty')
 ylabel('Cumulative return')
 xlabel('date')
@@ -484,7 +442,7 @@ clear f;
 
 %% Support vector machine
 
-SVM_Model; % Lauching the model  pok
+SVM_Model; % Lauching the model
 
 % Volatility Parity
 [SVM_MODEL.W, SVM_MODEL.S, SVM_MODEL.L] = SVM_Strategy(data.daily, 90, SVM_MODEL, data.classNum, 0.2,'VolParity');
@@ -527,31 +485,26 @@ xlabel('date')
 legend('Volatility Parity','Risk Parity','Equally Weighted','location','northwest')
 print(f,'Output/SVM', '-dpng', '-r1000')
 
-%{
-%% Ensemble Learning
-
-% Strategies are not too much correlated
-Ensemble.start = length(SVM_MODEL_Risk.CumR) - 1;  %Smaller Model
-Ensemble.CorrEstim = 12; % We estimate 1 year correlation
-Ensemble.Corr = corr(SVM_MODEL_Risk.CumR(1:Ensemble.CorrEstim), MBBSEW.CumR(end-Ensemble.start:end - Ensemble.start+Ensemble.CorrEstim-1));
-
-%% Risk parity Inter
-[RPI.W, RPI.S, RPI.L] = RP_A(data.daily, 90, 90, 0.1, data.classNum);
-RPI.NW = RPI.W.*RPI.S;
-[RPI.R,RPI.CumR,RPI.Stats] = PortfolioStatistics(data.monthly,...
-    RPI.NW,RPI.L');
-%}
 
 %% Sensitivity Analysis
 
-% Sensitivity MBBS
-MBBS__Sensitivity;
 
-% Sensitivity SSA
-SSA_Sensitivity;
+prompt = 'Do you want to perform the sensitivity analysis, it can take up to 10 minutes? Y/N [Y]: ';
+str = input(prompt,'s');
+if isempty(str)
+    str = 'Y';
+end
 
-% Sensitivity SVM
-SVM_Sensitivity;
+if strcmp(str,'Y')
+    % Sensitivity MBBS
+    MBBS__Sensitivity;
+
+    % Sensitivity SSA
+    SSA_Sensitivity;
+
+    % Sensitivity SVM
+    SVM_Sensitivity;
+end
 
 %% Creating tables, GUI and clearing cache
 
@@ -559,7 +512,7 @@ SVM_Sensitivity;
 creatingtables;
 % SG trend index barcaly en plus HFR macro systemic 
 % GUI
-Data_APP;
+guiData;
 GUI; % TODO : StartUpFcn -> Data loading before component creation
 
 AREAWEIGHTS(SSA_IndQuantity.S, data.classNum,...
@@ -579,7 +532,12 @@ plotSIGNAL(MBBSEW.S,data.classNum,...
 plotSIGNAL(MOM252VP.S,data.classNum,...
     data.Mdate(9:end),'Output/MOM252_s',...
     'MOM252 Signal Decomposition', ...
-    data.class)
+    data.class) 
+
+plotSIGNAL(MBBSEW.S,data.classNum,...
+    data.Mdate(9:end),'Output/MBBSEW',...
+    'MBBSEW Signal Decomposition', ...
+    data.class) 
 
 
 % Clear Temporary Variables

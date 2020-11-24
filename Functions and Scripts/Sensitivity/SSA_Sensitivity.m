@@ -32,7 +32,7 @@ data.Mdate = Date(data.daily,data.date ,SSA.MomLength, 21);
 
 %Parameters
 N = 45:15:225;
-V = 0.1:0.1:0.7;
+V = 0:0.1:0.7;
 
 LD = 1;
 SSA_IndQuantity.SR = zeros(length(N), length(V));
@@ -47,7 +47,8 @@ for REC = N
         
         % Computing the model
         [SSA_Sensibility.W,SSA_Sensibility.S,SSA_Sensibility.L] = ...
-            SSA_TF(data.p, data.daily, LD, REC, 'IndQuantity', COMP, 0.1);
+            SSA_TF(data.p, data.daily, LD, REC,'weight', 'volParity',...
+            'tradingRule', 'indQuantity', 'tradingTarget', COMP, 'volTarget',0.1);
         SSA_Sensibility.NW = SSA_Sensibility.W.*SSA_Sensibility.S;
         [SSA_Sensibility.R,SSA_Sensibility.CumR,SSA_Sensibility.Stats] = PortfolioStatistics(data.monthly,...
             SSA_Sensibility.NW(2:end,:),SSA_Sensibility.L(2:end),0.001);
@@ -96,7 +97,8 @@ SSA_IndQuantity.CR_PC = zeros(1, length(V_PC));
 for PCA = V_PC
         % Computing the model
         [SSA_Sensibility.W,SSA_Sensibility.S,SSA_Sensibility.L] = ...
-        SSA_TF(data.p, data.daily, PCA, 45, 'IndQuantity', 0.5, 0.1);
+        SSA_TF(data.p, data.daily, PCA, 45, 'weight', 'volParity',...
+            'tradingRule', 'indQuantity', 'tradingTarget', 0.5, 'volTarget',0.1);
         SSA_Sensibility.NW = SSA_Sensibility.W.*SSA_Sensibility.S;
         [SSA_Sensibility.R,SSA_Sensibility.CumR,SSA_Sensibility.Stats] = PortfolioStatistics(data.monthly,...
         SSA_Sensibility.NW(2:end,:),SSA_Sensibility.L(2:end),0.001);
@@ -134,7 +136,8 @@ for REC = N
         
         % Computing the model
         [SSA_Sensibility.W,SSA_Sensibility.S,SSA_Sensibility.L] = ...
-            SSA_TF(data.p, data.daily, COMP, REC, 'IndQuantity', 0.5, 0.1);
+            SSA_TF(data.p, data.daily, COMP, REC,'weight', 'volParity',...
+            'tradingRule', 'indQuantity', 'tradingTarget', 0.5, 'volTarget',0.1);
         SSA_Sensibility.NW = SSA_Sensibility.W.*SSA_Sensibility.S;
         [SSA_Sensibility.R,SSA_Sensibility.CumR,SSA_Sensibility.Stats] = PortfolioStatistics(data.monthly,...
             SSA_Sensibility.NW(2:end,:),SSA_Sensibility.L(2:end),0.001);
