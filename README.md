@@ -1,6 +1,8 @@
 # QARMII_project
 
-````python
+![HEC Lausanne](https://commons.wikimedia.org/wiki/File:Logo_HEC_Lausanne.png?uselang=fr)
+
+```python
 Quantitative Asset and Risk Management II
 Prof. Fabio Alessandrini
 HEC Lausanne
