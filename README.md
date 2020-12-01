@@ -1,12 +1,10 @@
 # QARMII_project
 
-`
+````python
 Quantitative Asset and Risk Management II
-
 Prof. Fabio Alessandrini
-
 HEC Lausanne
-`
+```
 
 The aim of this project is to create a CTA style  cross asset trend-following strategy with two side objectives:
 
