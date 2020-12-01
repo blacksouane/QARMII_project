@@ -1,5 +1,6 @@
 # QARMII_project
 ![mat](https://img.shields.io/badge/matlab-2020A-red) ![tex](https://img.shields.io/badge/Latex-tex-green)![TF](https://img.shields.io/badge/TrendFollowing-HEC-yellow)
+
 ![HEC Lausanne](https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/HEC_Lausanne_logo.svg/200px-HEC_Lausanne_logo.svg.png)
 
 ```python
