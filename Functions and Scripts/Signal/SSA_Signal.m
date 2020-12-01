@@ -11,12 +11,12 @@ function [S] = SSA_Signal(M, R, SIGN, varargin)
 ssaSignalInput = inputParser; 
 
 % Define scale parameters
-defaultScale = 2; 
-checkScale = @(x) isnumeric(x) && (x < 10);
+defaultScale = 1; 
+checkScale = @(x) isnumeric(x) && (x <= 10);
 
 % Define MinMax parameters
-defaultMinMax =  1; 
-checkMinMax = @(x) isnumeric(x) && (x < 10); 
+defaultMinMax =  2; 
+checkMinMax = @(x) isnumeric(x) && (x <= 10); 
 
 % Create Parsing Structure
 addRequired(ssaSignalInput, 'M');

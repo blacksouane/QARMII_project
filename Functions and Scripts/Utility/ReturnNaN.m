@@ -12,6 +12,9 @@ function [r,f] = ReturnNaN(p)
 % r : Matrix of r
 % f : Vector of first data value (after NaN)
 
+
+
+
 %Setting the parameters 
 N = size(p,2);
 

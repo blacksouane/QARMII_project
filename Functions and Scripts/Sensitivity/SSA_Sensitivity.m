@@ -175,4 +175,59 @@ ylabel('Component')
 zlabel('Calmar Ratio Ratio')
 print(f,'Output/SSA_Sensitivity_Calmar_Component', '-dpng', '-r1000')
 
+
+%% Rescaling
+SCALE = 1:10;
+minMax = 1:10;
+SSA_IndQuantity.SR_3 = zeros(length(SCALE),length(minMax));
+SSA_IndQuantity.CR_3 = zeros(length(SCALE),length(minMax));
+pos = 1; 
+pos_2 = 1; 
+for s = SCALE
+    
+    for m = minMax
+        
+         % Computing the model
+        [SSA_Sensibility.W,SSA_Sensibility.S,SSA_Sensibility.L] = ...
+            SSA_TF(data.p, data.daily, 1, 45, 'weight', 'volParity',...
+            'tradingRule', 'indQuantity', 'tradingTarget', 0.5,...
+            'volTarget',0.1, 'ssaScale', s,'ssaMinMax', m);
+        SSA_Sensibility.NW = SSA_Sensibility.W.*SSA_Sensibility.S;
+        [SSA_Sensibility.R,SSA_Sensibility.CumR,SSA_Sensibility.Stats] =...
+            PortfolioStatistics(data.monthly,...
+            SSA_Sensibility.NW(2:end,:),SSA_Sensibility.L(2:end),0.001);
+        
+        % Extracting Sharpe Ratio
+        SSA_IndQuantity.SR_3(pos_2, pos) = SSA_Sensibility.Stats{'Sharpe Ratio', 'Var1'};
+        SSA_IndQuantity.CR_3(pos_2, pos) = SSA_Sensibility.Stats{'Calmar Ratio', 'Var1'};
+        pos = pos + 1;
+    end
+    
+    pos_2 = pos_2 + 1; 
+    pos = 1; 
+end
+
+% Construct Plot components
+[X, Y] = meshgrid(SCALE, minMax);
+SSA_IndQuantity.SR_3(isnan(SSA_IndQuantity.SR_3)) = 0;
+SSA_IndQuantity.CR_3(isnan(SSA_IndQuantity.CR_3)) = 0;
+
+% Plotting Sharpe Ratio
+f = figure('visible', 'on');
+surf(X, Y, SSA_IndQuantity.SR_3.')
+title('SSA Signal Sharpe Ratio with varying parameters')
+xlabel('Rescaling bounds')
+ylabel('Extremes values shrinkage bounds')
+zlabel('Sharpe Ratio')
+print(f,'Output/SSA_Sensitivity_SHARPE_ScaleMinMax', '-dpng', '-r1000')
+
+% Plotting Calmar Ratio
+f = figure('visible', 'on');
+surf(X, Y, SSA_IndQuantity.CR_3.')
+title('SSA Signal Calmar Ratio with varying parameters')
+xlabel('Rescaling bounds')
+ylabel('Extremes values shrinkage bounds')
+zlabel('Calmar Ratio Ratio')
+print(f,'Output/SSA_Sensitivity_Calmar_ScaleMinMax', '-dpng', '-r1000')
+
 clear SSA_Sensibility N V REC_pos COMP_pos REC COMP f X Y PCA

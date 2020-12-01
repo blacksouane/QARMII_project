@@ -22,7 +22,7 @@ GUI.S(:, :, 3) = SVM_MODEL.S(end-minSize+1:end, :);
 
 %% Weights
 
-GUI.W(:, :, 1) = SVM_MODEL_EW.W(end-minSize+1:end, :); 
+GUI.W(:, :, 1) = MBBSEW.W(end-minSize+1:end, :); 
 GUI.W(:, :, 2) = SVM_MODEL.W(end-minSize+1:end, :);
 GUI.W(:, :, 3) = SVM_MODEL_Risk.W(end-minSize+1:end, :);
 

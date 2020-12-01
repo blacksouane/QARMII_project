@@ -49,13 +49,14 @@ end
  SVM_MODEL.Xtrain(11, 1:A, position) = data.classNum == 4;
  
  % Extracting Training Y Data
- Y = prod(SVM_MODEL.Data(day+SVM_MODEL.M:day+SVM_MODEL.M+SVM_MODEL.N-1, :)+1) - 1;
+ Y = prod(SVM_MODEL.Data(day+SVM_MODEL.M:day+SVM_MODEL.M+SVM_MODEL.N-1, :)+1) - 1; %last daily 2164
+ SVM_MODEL.Ytrain_NonBin(:,:,position) = Y;
  Y(Y>=0) = 1;
  Y(Y<0) = 0;
  SVM_MODEL.Ytrain(:,:,position) = Y;
- 
+
  % Looping the while
- day = day + 21; % I go month by month
+ day = day+21; % I go month by month
  position = position + 1; % Change the position of the data
  end
  SVM_MODEL.day = day;
@@ -80,6 +81,7 @@ end
  
  % Extracting Testing Y data
  Y = prod(SVM_MODEL.Data(TF+SVM_MODEL.M:TF+SVM_MODEL.M+SVM_MODEL.N, :)+1) - 1; % enelve le -1 the model.n
+ SVM_MODEL.Ytest_NonBin(:,:,position) = Y;
  Y(Y>=0) = 1;
  Y(Y<0) = 0;
  SVM_MODEL.Ytest(:,:,position) = Y;    
@@ -92,19 +94,83 @@ clear Y day
 % We need to reshape our data to only "contain" one training asset
 SVM_MODEL.Xtest = permute(SVM_MODEL.Xtest, [3 2 1]);
 SVM_MODEL.Xtrain = permute(SVM_MODEL.Xtrain, [3 2 1]);
-SVM_MODEL.Nexample = size(SVM_MODEL.Ytrain,2)*size(SVM_MODEL.Ytrain,3); 
+SVM_MODEL.Nexample = size(SVM_MODEL.Ytrain,2)*size(SVM_MODEL.Ytrain,3);
 SVM_MODEL.Ytrain = reshape(SVM_MODEL.Ytrain, [SVM_MODEL.Nexample 1]);
+SVM_MODEL.Ytrain_NonBin = reshape( SVM_MODEL.Ytrain_NonBin, [SVM_MODEL.Nexample 1]);
 SVM_MODEL.Xtrain = reshape(SVM_MODEL.Xtrain, [SVM_MODEL.Nexample 11]);
-SVM_MODEL.Ntest = size(SVM_MODEL.Ytest,2)*size(SVM_MODEL.Ytest,3); 
+SVM_MODEL.Ntest = size(SVM_MODEL.Ytest,2)*size(SVM_MODEL.Ytest,3);
 SVM_MODEL.Ytest = reshape(SVM_MODEL.Ytest, [SVM_MODEL.Ntest 1]);
+SVM_MODEL.Ytest_NonBin = reshape(SVM_MODEL.Ytest_NonBin, [SVM_MODEL.Ntest 1]);
 SVM_MODEL.Xtest = reshape(SVM_MODEL.Xtest, [SVM_MODEL.Ntest 11]);
 
 %% 2. Training the model
-SVM_MODEL.Model = fitcsvm(SVM_MODEL.Xtrain, SVM_MODEL.Ytrain, ...
-    'KernelFunction','rbf','Standardize','on');
- 
-%% 3. Test the model
-[SVM_MODEL.label, SVM_MODEL.score] = predict(SVM_MODEL.Model, SVM_MODEL.Xtest);
 
+%{
+% ************************ Data **********************************
+% Convert input to table
+inputTable = array2table(SVM_MODEL.Xtrain, 'VariableNames', ...
+    {'Standard Error', 'Mean', 'Skewness', 'Kurtosis', 'Mean [0 1/3]',...
+    'Mean [1/3 2/3]', 'Mean [2/3 1]', 'isEquity', 'isFx', 'isCommo', 'isFI'});
+
+% You can choose to use all the input data for the model
+predictorNames = {'Standard Error', 'Mean', 'Skewness', 'Kurtosis', ...
+    'Mean [0 1/3]', 'Mean [1/3 2/3]', 'Mean [2/3 1]', 'isEquity', 'isFx', 'isCommo', 'isFI'};
+predictors = inputTable(:, predictorNames);
+
+% Define Categorical Variables
+isCategoricalPredictor = [false, false, false, false, false,...
+    false, false, true, true, true, true];
+
+% Define Response Variables
+response = SVM_MODEL.Ytrain(:);
+
+% ********************** MODEL *********************************
+
+% Train a classifier
+SVM_MODEL.classificationSVM = fitcsvm(...
+    predictors, ...
+    response, ...
+    'KernelFunction', 'polynomial', ...
+    'PolynomialOrder', 2, ...
+    'KernelScale', 'auto', ...
+    'BoxConstraint', 1, ...
+    'Standardize', true, ...
+    'ClassNames', [-1; 1],...
+    'CategoricalPredictors',isCategoricalPredictor);
+
+% Create the result struct with predict function
+SVM_MODEL.predictorExtractionFcn = @(x) array2table(x, 'VariableNames', predictorNames);
+svmPredictFcn = @(x) predict(SVM_MODEL.classificationSVM, x);
+SVM_MODEL.predictFcn = @(x) svmPredictFcn(SVM_MODEL.predictorExtractionFcn(x));
+
+%}
+
+SVM_MODEL.classificationSVM = fitcsvm(...
+    SVM_MODEL.Xtrain,...
+    SVM_MODEL.Ytrain, ...
+    'KernelFunction','rbf',...
+    'Standardize','on',...
+    'CategoricalPredictors',[8, 9, 10, 11]);
+
+%{
+trainedClassifier.About = 'This struct is a trained model exported from Classification Learner R2020a.';
+trainedClassifier.HowToPredict = sprintf('To make predictions on a new predictor column matrix, X, use: \n  yfit = c.predictFcn(X) \nreplacing ''c'' with the name of the variable that is this struct, e.g. ''trainedModel''. \n \nX must contain exactly 11 columns because this model was trained using 11 predictors. \nX must contain only predictor columns in exactly the same order and format as your training \ndata. Do not include the response column or any columns you did not import into the app. \n \nFor more information, see <a href="matlab:helpview(fullfile(docroot, ''stats'', ''stats.map''), ''appclassification_exportmodeltoworkspace'')">How to predict using an exported model</a>.');
+%}
+    
+%% 3. Extract Model
+%{
+% Perform cross-validationa
+SVM_MODEL.partitionedModel = crossval(SVM_MODEL.classificationSVM, 'KFold', 10);
+
+% Compute validation predictions
+[SVM_MODEL.validationPredictions, SVM_MODEL.validationScores] = kfoldPredict(SVM_MODEL.partitionedModel);
+
+% Compute validation accuracy
+SVM_MODEL.validationAccuracy = 1 - kfoldLoss(SVM_MODEL.partitionedModel, 'LossFun', 'ClassifError');
+%{
+[SVM_MODEL.label, SVM_MODEL.score] = predict(SVM_MODEL.Model, SVM_MODEL.Xtest);
 SVM_MODEL.NUM = sum(SVM_MODEL.label)/SVM_MODEL.Ntest;
 SVM_MODEL.NUMY = sum(SVM_MODEL.Ytrain)/SVM_MODEL.Nexample;
+%}
+
+%}

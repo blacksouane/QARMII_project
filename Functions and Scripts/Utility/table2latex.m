@@ -56,7 +56,6 @@ function table2latex(T, filename)
     fileID = fopen(filename, 'w');
     fprintf(fileID,'\\begin{table}[H]\n');
     fprintf(fileID,'\\centering\n');
-    fprintf(fileID,'\\resizebox{\\textwidth}{!}{\n');
     fprintf(fileID, '\\begin{tabular}{%s}\n', col_spec);
     fprintf(fileID, '%s \\\\ \n', col_names);
     fprintf(fileID, '\\hline \n');
@@ -82,11 +81,61 @@ function table2latex(T, filename)
         error('Unknown error. Make sure that table only contains chars, strings or numeric values.');
     end
     
+    % Constructing Caption
+    strFile = string(filename(1:end-4));
+    
+    % Signal Name
+    if contains(strFile,'MA')
+        signName = 'Moving Average Cross-over';
+    elseif contains(strFile,'MOM')
+        if contains(strFile,'JUMP')
+            signName = 'Momentum Jump';
+        elseif contains(strFile, '90')
+            signName = 'Momentum 90 days';
+        elseif contains(strFile, '252')
+            signName = 'Momentum 252 days';
+        else   
+            signName = 'undefined signal';
+        end
+    elseif contains(strFile,'MBBS')
+        signName = 'EWMA Crossover';
+    elseif contains(strFile, 'SVM')
+        signName = 'Support Vector Machine';
+    elseif contains(strFile, 'SSA')
+        signName = 'Singular Sprectal Analysis';
+    else 
+        signName = 'OTHER TYPE OF TABLES:TO CHANGE !!! ';
+    end
+    
+    % Type of table name
+    if contains(strFile, 'AFACTOR')
+        tableName = 'Correlation analysis with major indices of';
+    elseif contains(strFile, 'FACTOR')
+        tableName = 'Factor Analysis of';
+    elseif contains(strFile, 'CORR')
+        tableName = 'Correlation study of';
+    else
+        tableName = 'Descriptive Statistics of';
+    end
+    
+    % Weighting Scheme Name
+        if contains(strFile, 'Risk') || contains(strFile, 'RP') || contains(strFile,'RISK')
+        weightName = 'risk parity';
+    elseif contains(strFile, 'EW')
+        weightName = 'equally weighted';
+    elseif contains(strFile, 'VP')
+        weightName = 'volatility parity';
+    else
+        weightName = 'volatility parity';
+        end
+    
+    captionName = append('\\caption{',tableName, ' the ', signName, ' signal with a ',...
+        weightName, ' weighting scheme.}\n');
     % Closing the file
     fprintf(fileID, '\\hline\n');
-    fprintf(fileID, '\\end{tabular}}\n');
-    fprintf(fileID, '\\caption{Descriptive statistics for all the Model 1 strategies}\n');
-    fprintf(fileID, '\\label{%s}\n', filename(1:end-4));
+    fprintf(fileID, '\\end{tabular}\n');
+    fprintf(fileID, captionName);
+    fprintf(fileID, '\\label{%s}\n', filename(15:end-4));
     fprintf(fileID, '\\end{table}');
     fclose(fileID);
 end

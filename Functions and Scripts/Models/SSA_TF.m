@@ -78,7 +78,7 @@ defaultVolTarget = 0.1;
 checkVolTarget = @(x) isnumeric(x);
 
 % Define ssaRescale parameters
-defaultScale = 2; 
+defaultScale = 1; 
 checkScale = @(x) isnumeric(x);
 
 %Define ssaMinMax parameters
@@ -99,7 +99,6 @@ addParameter(ssaInput, 'ssaMinMax', defaultMinMax, checkMinMax);
 
 % Parse the inputs
 parse(ssaInput, P, R, EIG, M, varargin{:})
-
 %% Input extracting and Parameters
 
 % Check for empty name/pair arguments and display it/them
@@ -143,7 +142,8 @@ for t = M+1:21:T
     P_T = P(t-M:t,Ind);
     
     % Compute Signal
-    S(position, Ind) = SSA_Signal(EIG, P_T, M);
+    S(position, Ind) = SSA_Signal(EIG, P_T, M, 'scale', ...
+        ssaInput.Results.ssaScale, 'minMax', ssaInput.Results.ssaMinMax);
     
     %**********************************************************************
     % Handle Weighting Scheme

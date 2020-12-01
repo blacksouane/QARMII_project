@@ -169,3 +169,5 @@ clear FactorAnalysis2S1
 clear opts
 
 data.AF.monthly.r = data.AF.monthly.p(2:end,:)./data.AF.monthly.p(1:end-1,:)-1;
+
+disp('####### Importing the Data is done !#######')

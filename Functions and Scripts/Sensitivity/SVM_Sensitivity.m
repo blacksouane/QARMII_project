@@ -16,7 +16,7 @@ yield usanle results.
 %% Parameters 
 
 %Parameters 
-P = 0:0.01:0.6;
+P = 0:0.01:0.25;
 
 %Pre-Allocating
 SVM_MODEL_Risk.Sensivity.SR = zeros(length(P), 1);
@@ -29,7 +29,7 @@ for PP = P
   
     % Computing Model
     [SENSI_Risk.W, SENSI_Risk.S, SENSI_Risk.L] = ...
-        SVM_Strategy(data.daily, 90, SVM_MODEL, data.classNum, PP,'RiskParity');
+        SVM_Strategy(data.daily, 90, SVM_MODEL, data.classNum, PP,'volParity');
     SENSI_Risk.NW = SENSI_Risk.W.*SENSI_Risk.S;
     [SENSI_Risk.R, SENSI_Risk.CumR, SENSI_Risk.Stats] =...
         PortfolioStatistics(data.monthly(end-length(SENSI_Risk.S)+1:end,:),...
@@ -56,7 +56,7 @@ plot(P,SVM_MODEL_Risk.Sensivity.CR);
 title('SVM statistics with varying trading rule')
 xlabel('Confidence Threshold to enter into a position')
 ylabel('Calmar Ratio')
-print(f,'Output/SSA_Sensitivity_Component', '-dpng', '-r1000')
+print(f,'Output/SVM_Sensitivity_Threshold', '-dpng', '-r1000')
 
 
 %% Presicion analysis
@@ -82,9 +82,9 @@ SVM_MODEL_Risk.Precision.Y_true = Y_true;
 
 % Run Model without trading rule
 [~, SVM_MODEL_Risk.Precision.S0, ~] = ...
-   SVM_Strategy(data.daily, 90, SVM_MODEL, data.classNum, 0,'RiskParity');
+   SVM_Strategy(data.daily, 90, SVM_MODEL, data.classNum, 0,'volParity');
 [~, SVM_MODEL_Risk.Precision.S20, ~] = ...
-   SVM_Strategy(data.daily, 90, SVM_MODEL, data.classNum, 0.2,'RiskParity');
+   SVM_Strategy(data.daily, 90, SVM_MODEL, data.classNum, 0.2,'volParity');
 
 % Confusion Matrix
 SVM_MODEL_Risk.Precision.C0 = confusionmat(reshape(SVM_MODEL_Risk.Precision.Y_true, [157*18, 1]), ...

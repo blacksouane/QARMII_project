@@ -81,10 +81,10 @@ X=[MODEL.C,MODEL.C_Inter,MODEL.C_Intra];
 
 % fitting the model 
 reg = fitlm(X,MODEL.S);
-MODEL.Reg = zeros(2,7);
-MODEL.Reg(1,:) = reg.Coefficients.Estimate;
-MODEL.Reg(2,:) = reg.Coefficients.pValue;
-MODEL.Reg = array2table(MODEL.Reg,'VariableNames',{'intercept','All','Equity','Fx','Commo','FI','InClass'},'RowNames',...
+MODEL.CORR = zeros(2,7);
+MODEL.CORR(1,:) = reg.Coefficients.Estimate;
+MODEL.CORR(2,:) = reg.Coefficients.pValue;
+MODEL.CORR = array2table(MODEL.CORR,'VariableNames',{'intercept','All','Equity','Fx','Commo','FI','InClass'},'RowNames',...
     {'Coefficient SR','pValue SR'});
 
 end

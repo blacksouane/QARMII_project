@@ -7,7 +7,7 @@ function [sig, x_k, y_k, z_k, u_k] = bazsignal(P,D1,D2,PW,SW)
 % D2 : is the number of day of the long term EWMA like 100 days or 200
 % days, need to be bigger or equal than PW
 % PW : size of the moving std of the price, recommand in the paper 63 need
-% to be smaller or equal to D2
+% to be smaller or equal to D-1
 % SW : size of the moving std of the yk, recommand in the paper 252
 
 %   OUTPUT:

@@ -268,7 +268,7 @@ elseif strcmp(signal,'MA') && strcmp(scheme,'VP')
         W(position, Ind) = volparity(toCompute);
         
         % Compute the signals
-        S(position,Ind) = MAsignal(p(time - M:time, Ind),delta(1), delta(2));
+        S(position,Ind) = MAsignal(p(1:time, Ind),delta(1), delta(2));
         
         % Compute Leverage
         W_l = S(position,Ind).*W(position, Ind);

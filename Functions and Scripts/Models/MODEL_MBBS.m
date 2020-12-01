@@ -15,13 +15,6 @@ function [W,S,L,w1] = MODEL_MBBS(P, R, n, D1, D2, PW, SW, varargin)
 %number of assets).
 %'Forecast' -> A method. for now only "Garch"
 
-% Varargin :
-% TODO :
-
-% 1. Case if no input in varargin
-% 2. Implemting garch etc..
-% 3. In the case of "Quantity" do we target the Forecastatility ?
-
 %% Assert Input validity
 
 assert(strcmp(varargin(1),'Target') || strcmp(varargin(1),'Quantity')|| ...
@@ -39,7 +32,7 @@ f = zeros(1,A); %Vector having each first available return
 for i = 1:A
     f(i) = find (~ isnan(R(:,i)), 1);
 end
-M = SW + D2 - 2;
+M = SW + 100;
 
 % Preallocating the memory
 W = zeros(round((T - M)/21, 0), A); %Weights
@@ -50,7 +43,7 @@ position = 1; %allow for monthly rebalancing
 
 %% Performing Allocation
 
-for time = M+2:21:T
+for time = M+1:21:T
     
     %Displaying position of the allocation
     if mod(position, 20) == 0
@@ -68,7 +61,8 @@ for time = M+2:21:T
     W(position, Ind) = volparity(R_T);
     
     % Compute Signal
-    [S(position, Ind),~,~,~,~] = bazsignal(P_T, D1, D2, PW, SW);
+    S(position, Ind) = ewmaCO(P_T, 100);
+    %[S(position, Ind),~,~,~,~] = bazsignal(P_T, D1, D2, PW, SW);
     
     % Advanced method
     if strcmp(varargin(1), 'Target')
@@ -153,7 +147,7 @@ for time = M+2:21:T
         if QT <= TH %if trend is smaller than threshold
             
             % We don't take any signal if there is not enough trend (long only)
-            S(position, :) = abs(S(position, :));
+            S(position, :) = 1;%abs(S(position, :));
             
         end
         

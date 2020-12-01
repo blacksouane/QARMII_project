@@ -61,3 +61,5 @@ end
 
 RWML = data.fffactor.daily(:,6)-data.rf.daily; %Momentum FamaFrench (Excess Return)
 RM = data.fffactor.daily(:,1); %Market (Excess Return)
+
+disp('############# Processing the Data is done !#############')
