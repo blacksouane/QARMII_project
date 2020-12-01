@@ -2,7 +2,9 @@
 
 `
 Quantitative Asset and Risk Management II
+
 Prof. Fabio Alessandrini
+
 HEC Lausanne
 `
 
