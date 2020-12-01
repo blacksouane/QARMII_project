@@ -1,6 +1,6 @@
 # QARMII_project
 
-![HEC Lausanne](https://commons.wikimedia.org/wiki/File:Logo_HEC_Lausanne.png?uselang=fr)
+![HEC Lausanne](https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/HEC_Lausanne_logo.svg/200px-HEC_Lausanne_logo.svg.png)
 
 ```python
 Quantitative Asset and Risk Management II
