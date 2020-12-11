@@ -58,11 +58,11 @@ table2latex(rows2vars(Model1_stats), 'Output/Tables/model1.tex');
 % table2latex(MBBS.FACTOR, 'Output/Tables/MBBS_FACTOR.tex');
 % table2latex(MBBS.AFACTOR, 'Output/Tables/MBBS_AFACTOR.tex');
 
-% *************************** Leverage  *************************** 
-table2latex(MBBSLeverage.Stats, 'Output/Tables/MBBSLeverage.tex')
-table2latex(MBBSLeverage.FACTOR, 'Output/Tables/MBBSLeverage_FACTOR.tex');
-table2latex(MBBSLeverage.AFACTOR, 'Output/Tables/MBBSLeverage_AFACTOR.tex');
-table2latex(MBBSLeverage.CorrelationAnalysis.CORR, 'Output/Tables/MBBS_CORR.tex');
+% *************************** MBBSVPNR  *************************** 
+table2latex(MBBSVPNR.Stats, 'Output/Tables/MBBSVPNR.tex')
+table2latex(MBBSVPNR.FACTOR, 'Output/Tables/MBBSVPNR_FACTOR.tex');
+table2latex(MBBSVPNR.AFACTOR, 'Output/Tables/MBBSVPNR_AFACTOR.tex');
+table2latex(MBBSVPNR.CorrelationAnalysis.CORR, 'Output/Tables/MBBSVPNR_CORR.tex');
 %{
 % *************************** GARCH  *************************** 
 table2latex(MBBS3.Stats, 'Output/Tables/MBBS3.tex')
@@ -70,18 +70,41 @@ table2latex(MBBS3.FACTOR, 'Output/Tables/MBBS3_FACTOR.tex');
 table2latex(MBBS3.AFACTOR, 'Output/Tables/MBBS3_AFACTOR.tex');
 %}
 
-% *************************** Individual trend quantity  *************************** 
-table2latex(MBBS2.Stats, 'Output/Tables/MBBS2.tex')
-table2latex(MBBS2.FACTOR, 'Output/Tables/MBBS2_FACTOR.tex');
-table2latex(MBBS2.AFACTOR, 'Output/Tables/MBBS2_AFACTOR.tex');
-table2latex(MBBS2.CorrelationAnalysis.CORR, 'Output/Tables/MBBS2__RP_CORR.tex');
+% *************************** MBBSRPNR  *************************** 
+table2latex(MBBSRPNR.Stats, 'Output/Tables/MBBSRPNR.tex')
+table2latex(MBBSRPNR.FACTOR, 'Output/Tables/MBBSRPNR_FACTOR.tex');
+table2latex(MBBSRPNR.AFACTOR, 'Output/Tables/MBBSRPNR_AFACTOR.tex');
+table2latex(MBBSRPNR.CorrelationAnalysis.CORR, 'Output/Tables/MBBSRPNR_CORR.tex');
 
 
-% *************************** Equally Weighted (TrendQuantity) *************************** 
-table2latex(MBBSEW.Stats, 'Output/Tables/MBBSEW.tex')
-table2latex(MBBSEW.FACTOR, 'Output/Tables/MBBSEW_FACTOR.tex');
-table2latex(MBBSEW.AFACTOR, 'Output/Tables/MBBSEW_AFACTOR.tex');
-table2latex(MBBSEW.CorrelationAnalysis.CORR, 'Output/Tables/MBBS_EW_CORR.tex');
+% *************************** MBBSEWNR *************************** 
+table2latex(MBBSEWNR.Stats, 'Output/Tables/MBBSEWNR.tex')
+table2latex(MBBSEWNR.FACTOR, 'Output/Tables/MBBSEWNR_FACTOR.tex');
+table2latex(MBBSEWNR.AFACTOR, 'Output/Tables/MBBSEWNR_AFACTOR.tex');
+table2latex(MBBSEWNR.CorrelationAnalysis.CORR, 'Output/Tables/MBBSEWNR_CORR.tex');
+
+% *************************** MBBSVPOQ  *************************** 
+table2latex(MBBSVPOQ.Stats, 'Output/Tables/MBBSVPOQ.tex')
+table2latex(MBBSVPOQ.FACTOR, 'Output/Tables/MBBSVPOQ_FACTOR.tex');
+table2latex(MBBSVPOQ.AFACTOR, 'Output/Tables/MBBSVPOQ_AFACTOR.tex');
+table2latex(MBBSVPOQ.CorrelationAnalysis.CORR, 'Output/Tables/MBBSVPOQ_CORR.tex');
+
+% *************************** MBBSRPOQ  *************************** 
+table2latex(MBBSRPOQ.Stats, 'Output/Tables/MBBSRPOQ.tex')
+table2latex(MBBSRPOQ.FACTOR, 'Output/Tables/MBBSRPOQ_FACTOR.tex');
+table2latex(MBBSRPOQ.AFACTOR, 'Output/Tables/MBBSRPOQ_AFACTOR.tex');
+table2latex(MBBSRPOQ.CorrelationAnalysis.CORR, 'Output/Tables/MBBSRPOQ_CORR.tex');
+
+
+% *************************** MBBSEWOQ *************************** 
+table2latex(MBBSEWOQ.Stats, 'Output/Tables/MBBSEWOQ.tex')
+table2latex(MBBSEWOQ.FACTOR, 'Output/Tables/MBBSEWOQ_FACTOR.tex');
+table2latex(MBBSEWOQ.AFACTOR, 'Output/Tables/MBBSEWOQ_AFACTOR.tex');
+table2latex(MBBSEWOQ.CorrelationAnalysis.CORR, 'Output/Tables/MBBSEWOQ_CORR.tex');
+
+% *************************** MBBS *************************** 
+table2latex(rows2vars(MBBS_stats), 'Output/Tables/MBBS_stats.tex');
+table2latex(MBBS_corrregime,  'Output/Tables/MBBS_corrregime.tex');
 
 %% SSA
 

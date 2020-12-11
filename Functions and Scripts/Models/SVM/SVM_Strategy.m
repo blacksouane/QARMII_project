@@ -1,9 +1,8 @@
 function [W, S, L] = SVM_Strategy(data, n, Model, C, F, Option)
 
-% Test function, we start around 4000
 start = Model.day;
-data = data(start+121:end,:);
-M = 90;
+data = data(start+112:end,:);
+M = n;
 position = 1;
 [T, A] = size(data);
 
@@ -39,6 +38,12 @@ end
 
 % Compute Signal
 [S(position, Ind)] = SVM_Signal(data(time-M:time-1,Ind),Model.classificationSVM, C, F); % enlever le time-m+1 et ajouter -1
+
+%handling trading rule
+% if position ~= 1
+%     lowTrend = S(position,Ind) == 0;
+%     S(position, lowTrend) = S(position-1, lowTrend);
+% end
 
 % We are taking leverage to get a constant running Volatility
 W_T = W(position, Ind).*S(position, Ind);

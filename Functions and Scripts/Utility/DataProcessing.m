@@ -54,12 +54,11 @@ legend('Equity', 'Currencies', 'Commodities', 'Fixed Income','Location','bestout
 print(f,'Output/Availability', '-dpng', '-r1000')
 clear availablity class f
 
-for i=1:18
-    plotprice(data.p(:,i),data.names(i), data.date)
-end
+plotprice(data.p,data.names, data.date)
 
-
-RWML = data.fffactor.daily(:,6)-data.rf.daily; %Momentum FamaFrench (Excess Return)
-RM = data.fffactor.daily(:,1); %Market (Excess Return)
-
-disp('############# Processing the Data is done !#############')
+%RWML = data.fffactor.daily(:,6)-data.rf.daily; %Momentum FamaFrench (Excess Return)
+%RM = data.fffactor.daily(:,1); %Market (Excess Return)
+clear y0 x0 width i height asset
+disp('####################################################################');
+disp('------------------ Processing the Data is Done ! -------------------');
+disp('####################################################################');

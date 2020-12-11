@@ -85,6 +85,10 @@ checkScale = @(x) isnumeric(x);
 defaultMinMax = 2;
 checkMinMax = @(x) isnumeric(x);
 
+% Verbosity
+defaultVerbose = 1;
+checkVerbose = @(x) x == 0 || x==1;
+
 % Create Parsing Structure
 addRequired(ssaInput, 'P');
 addRequired(ssaInput, 'R');
@@ -96,15 +100,18 @@ addParameter(ssaInput, 'tradingTarget', defaultTradingLevel, checkTradingLevel);
 addParameter(ssaInput, 'volTarget', defaultVolTarget, checkVolTarget);
 addParameter(ssaInput, 'ssaScale', defaultScale, checkScale);
 addParameter(ssaInput, 'ssaMinMax', defaultMinMax, checkMinMax);
+addParameter(ssaInput, 'verbose', defaultVerbose, checkVerbose);
 
 % Parse the inputs
 parse(ssaInput, P, R, EIG, M, varargin{:})
 %% Input extracting and Parameters
 
 % Check for empty name/pair arguments and display it/them
-if ~isempty(ssaInput.UsingDefaults)
-    disp('Using defaults: ')
-    disp(ssaInput.UsingDefaults)
+if ssaInput.Results.verbose == 1
+    if ~isempty(ssaInput.UsingDefaults)
+        disp('Using defaults: ')
+        disp(ssaInput.UsingDefaults)
+    end
 end
 
 % Size Parameters
@@ -129,8 +136,10 @@ position = 1;
 for t = M+1:21:T
     
     %Displaying position of the allocation
-    if mod(position, 20) == 0
-        fprintf('Allocation %d over %d has been performed !\n',position, round((T-(M+1))/21));
+    if ssaInput.Results.verbose == 1
+        if mod(position, 20) == 0
+            fprintf('Allocation %d over %d has been performed !\n',position, round((T-(M+1))/21));
+        end
     end
     
     % Find index of available assets at t "t"
@@ -177,10 +186,12 @@ for t = M+1:21:T
         TH = sum(available)*ssaInput.Results.tradingTarget;
         
         % Displaying number of assets over threshold
-        if mod(position,20) == 0
-            fprintf('The number of asset is %d, the threshold is %.4g and the quantity of trend is %.4g !\n',...
-                sum(available), TH, QT);
-            
+        if ssaInput.Results.verbose == 1
+            if mod(position,20) == 0
+                fprintf('The number of asset is %d, the threshold is %.4g and the quantity of trend is %.4g !\n',...
+                    sum(available), TH, QT);
+
+            end
         end
         
         % Applying the rule
@@ -215,12 +226,13 @@ for t = M+1:21:T
         end
         
         % Displaying computations
-        if mod(position,20) == 0
-            fprintf(...
-                'The number of asset is %d, the threshold is %.4g and the number of asset over the threshold are %d !\n',...
-                sum(available), TH, sum(OUT));
+        if ssaInput.Results.verbose == 1
+            if mod(position,20) == 0
+                fprintf(...
+                    'The number of asset is %d, the threshold is %.4g and the number of asset over the threshold are %d !\n',...
+                    sum(available), TH, sum(OUT));
+            end
         end
-        
         
     end
     

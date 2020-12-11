@@ -1,125 +1,160 @@
-% make vary the level of the amount of trend in the signal 
+%{
+this script perform a sensitivity analysis on the model MBBS with
+volatility parity with trend quantity at 0.7. 
+
+To measure the impact of the parameters we will inspect the sharpe and
+calmar ratio. 
+
+the parameters that vary are : 
+    1. responseScale parameter
+    2. Lambda
+    3. both parameters
+
+We do not change the length of the moving average as it is weighted
+exponentially, the impact of changing the length is almost null
+
+the rescale response is initially set in Baz al. at 0.89 an enter in the
+rescale function R(z_k) in their paper. we test for a range from 0.5 to 1.2
+
+lambda is the forgetting factor, it is initially set as a matrix 2 by 3 and
+a multiple of 8. we decide to test for different value from 2 to 15. 
+
+%}
+%% ResponseScale parameter varying 
+
+% recompute the date
 MomLength = 252;
-sign = max(D(2),63);
+sign = max(D,63);
 data.monthly = MonthlyReturns(data.daily, MomLength+sign, 21);
 data.Mdate = Date(data.daily,data.date ,MomLength+sign, 21);
 
-
-trend = 0:0.1:0.8;
-MBBS_Sensitivity.SR = zeros(length(trend),1);
-MBBS_Sensitivity.CR = zeros(length(trend),1);
-
-position = 1;
-for qt = trend 
-
-    [MBBS_Sensitivity.W,MBBS_Sensitivity.S,MBBS_Sensitivity.L] = modelMBBS(data.p, data.daily, D(1), D(2), 90, 'tradingRule', 'overQuantity',...
-    'weighting', 'riskParity','tradingTarget',qt);
-    MBBS_Sensitivity.NW = MBBS_Sensitivity.W.*MBBS_Sensitivity.S;
-    [MBBS_Sensitivity.R,MBBS_Sensitivity.CumR,MBBS_Sensitivity.Stats] = PortfolioStatistics(data.monthly(9:end,:),...
-        MBBS_Sensitivity.NW,MBBS_Sensitivity.L,0.001);
-
-    MBBS_Sensitivity.SR(position, 1) = MBBS_Sensitivity.Stats{'Sharpe Ratio', 'Var1'};
-    MBBS_Sensitivity.CR(position, 1) = MBBS_Sensitivity.Stats{'Calmar Ratio', 'Var1'};
-    position = position + 1;
-end 
-
-f = figure('visible','on');
-plot(trend, MBBS_Sensitivity.SR)
-title('MBBS EW Sharpe Ratio with varying trend quantity')
-xlabel('Threshold')
-ylabel('Sharpe Ratio')
-print(f,'Output/MBBS_Sensitivity_Sharpe', '-dpng', '-r1000')
-
-f = figure('visible','on');
-plot(trend, MBBS_Sensitivity.CR)
-title('MBBS EW Calmar ratio with varying trend quantity')
-xlabel('Threshold')
-ylabel('Sharpe Ratio')
-print(f,'Output/MBBS_Sensitivity_Sharpe', '-dpng', '-r1000')
-
-
-%% vary long and short moving average 
-% only the short term 
-short = 150:10:300;
-
-MBBS_Sensitivity.SR_ST = zeros(length(short),1);
-MBBS_Sensitivity.CR_ST = zeros(length(short),1);
+% set the range for the ResponseScale parameter
+RS = 0.5:0.1:1.2; 
+MBBS_Sensitivity.SR = zeros(length(RS),1);
+MBBS_Sensitivity.CR = zeros(length(RS),1);
 
 position = 1;
-for st = short 
-          sign = max(st,63);
-          data.monthly = MonthlyReturns(data.daily, MomLength+sign, 21);
-          
-    [MBBS_Sensitivity.W,MBBS_Sensitivity.S,MBBS_Sensitivity.L] = modelMBBS(data.p, data.daily, 1, st, 90, 'tradingRule', 'overQuantity',...
-    'weighting', 'riskParity','tradingTarget',0.5);
+for qt = RS 
+
+    [MBBS_Sensitivity.W,MBBS_Sensitivity.S,MBBS_Sensitivity.L] = modelMBBS(data.p, data.daily, D, 90,...
+        'tradingRule', 'overQuantity','weighting', 'volParity','tradingTarget',0.7,...
+        'responseScale',qt);
     MBBS_Sensitivity.NW = MBBS_Sensitivity.W.*MBBS_Sensitivity.S;
     [MBBS_Sensitivity.R,MBBS_Sensitivity.CumR,MBBS_Sensitivity.Stats] = PortfolioStatistics(data.monthly,...
         MBBS_Sensitivity.NW,MBBS_Sensitivity.L,0.001);
 
+    MBBS_Sensitivity.SR(position, 1) = MBBS_Sensitivity.Stats{'Sharpe Ratio', 'Var1'};
+    MBBS_Sensitivity.CR(position, 1) = MBBS_Sensitivity.Stats{'Calmar Ratio', 'Var1'};
+    %disp(MBBS_Sensitivity.Stats{'Annualized Volatility', 'Var1'});
+    position = position + 1;
+end 
+
+f = figure('visible','on');
+plot(RS, MBBS_Sensitivity.SR)
+title('MBBS V.Parity O.Trend Sharpe ratio')
+xlabel('responseScale')
+ylabel('Sharpe Ratio')
+print(f,'Output/MBBS_Sensitivity_Sharpe', '-dpng', '-r1000')
+
+f = figure('visible','on');
+plot(RS, MBBS_Sensitivity.CR)
+title('MBBS V.Parity O.Trend Calmar ratio')
+xlabel('responseScale')
+ylabel('Calmar Ratio')
+print(f,'Output/MBBS_Sensitivity_Calmar', '-dpng', '-r1000')
+
+
+%% Lambda/ forgetting parameter varying
+% set the range for the forgetting factor 
+U = 4:12;
+
+% pre-allocating the memory
+MBBS_Sensitivity.SR_ST = zeros(length(U),1);
+MBBS_Sensitivity.CR_ST = zeros(length(U),1);
+
+position = 1;
+for st = U 
+   
+    [MBBS_Sensitivity.W,MBBS_Sensitivity.S,MBBS_Sensitivity.L] = modelMBBS(data.p, data.daily, D, 90,...
+        'tradingRule', 'overQuantity', 'weighting', 'volParity','tradingTarget',0.7,...
+        'memory',st);
+    MBBS_Sensitivity.NW = MBBS_Sensitivity.W.*MBBS_Sensitivity.S; % comoute the net weight 
+    
+    % compute the performance
+    [MBBS_Sensitivity.R,MBBS_Sensitivity.CumR,MBBS_Sensitivity.Stats] = PortfolioStatistics(data.monthly,...
+        MBBS_Sensitivity.NW,MBBS_Sensitivity.L,0.001);
+    
+    % store the sharpe and calmar ratio with the new parameter
     MBBS_Sensitivity.SR_ST(position, 1) = MBBS_Sensitivity.Stats{'Sharpe Ratio', 'Var1'};
     MBBS_Sensitivity.CR_ST(position, 1) = MBBS_Sensitivity.Stats{'Calmar Ratio', 'Var1'};
     position = position + 1;
 end 
 
+%plot the result sharpe
 f = figure('visible','on');
-plot(short, MBBS_Sensitivity.SR_ST)
-title('MBBS EW Sharpe Ratio with varying Short term move')
-xlabel('length of the short term EWMA')
+plot(U, MBBS_Sensitivity.SR_ST)
+title('MBBS V.Parity O.Trend Sharpe ratio with \lambda varying')
+xlabel('\lambda')
 ylabel('Sharpe Ratio')
-print(f,'Output/MBBS_Sensitivity_SharpeST', '-dpng', '-r1000')
+print(f,'Output/MBBS_Sensitivity_SharpeL', '-dpng', '-r1000')
 
+%plot the result for the calmar
 f = figure('visible','on');
-plot(short, MBBS_Sensitivity.CR_ST)
-title('MBBS EW Calmar Ratio with varying Short term move')
-xlabel('length of the short term EWMA')
+plot(U, MBBS_Sensitivity.CR_ST)
+title('MBBS V.Parity O.Trend Calmar ratio with \lambda varying')
+xlabel('\lambda')
 ylabel('Calmar Ratio')
-print(f,'Output/MBBS_Sensitivity_CalmarST', '-dpng', '-r1000')
+print(f,'Output/MBBS_Sensitivity_CalmarL', '-dpng', '-r1000')
 
-%% Short and threshold
-trend = 0.5:0.1:0.9;
-short = 100:20:300;
-MBBS_Sensitivity.SR_2 = zeros(length(trend),length(short));
-MBBS_Sensitivity.CR_2 = zeros(length(trend),length(short));
+%% ResponseScale and lambda paramter varying 
+RS = 0.5:0.1:1.2; % set the possible amount of RS 
+U = 2:15; % set possible length of moving average 
 
+% pre allocate the memory
+MBBS_Sensitivity.SR_2 = zeros(length(RS),length(U));
+MBBS_Sensitivity.CR_2 = zeros(length(RS),length(U));
+
+%set initial position 
 position = 1;
 pos = 1 ; 
 
-for qt = trend 
-    for st = short
-        disp(position)
-          sign = max(st,63);
-          data.monthly = MonthlyReturns(data.daily, MomLength+sign, 21);
-          
-        [MBBS_Sensitivity.W,MBBS_Sensitivity.S,MBBS_Sensitivity.L] = modelMBBS(data.p, data.daily, D(1), st, 90, 'tradingRule', 'overQuantity',...
-    'weighting', 'riskParity','tradingTarget',qt);
-        MBBS_Sensitivity.NW = MBBS_Sensitivity.W.*MBBS_Sensitivity.S;
+for qt = RS % loop for the rescale parameter 
+    for st = U % loop for lambda
+        disp(position) % indicator where we are 
+        %compute weight 
+        [MBBS_Sensitivity.W,MBBS_Sensitivity.S,MBBS_Sensitivity.L] = modelMBBS(data.p, data.daily, D, 90,...
+        'tradingRule', 'overQuantity', 'weighting', 'volParity','tradingTarget',0.7,...
+        'memory',st,'responseScale',qt);
+        MBBS_Sensitivity.NW = MBBS_Sensitivity.W.*MBBS_Sensitivity.S; %net weight 
         [MBBS_Sensitivity.R,MBBS_Sensitivity.CumR,MBBS_Sensitivity.Stats] = PortfolioStatistics(data.monthly,...
             MBBS_Sensitivity.NW,MBBS_Sensitivity.L,0.001);
-
+        
         MBBS_Sensitivity.SR_2(position, pos) = MBBS_Sensitivity.Stats{'Sharpe Ratio', 'Var1'};
         MBBS_Sensitivity.CR_2(position, pos) = MBBS_Sensitivity.Stats{'Calmar Ratio', 'Var1'};
         pos = pos + 1;
-    end 
+    end
     position = position + 1;
     pos = 1;
-end 
+end
 
-[X, Y] = meshgrid(short, trend);
+[X, Y] = meshgrid(U, RS); % require for the surface figure
 
+%plot the result in a surface for sharpe 
 f = figure('visible', 'on');
 surf(X, Y, MBBS_Sensitivity.SR_2)
-title('MBBS RP Sharpe Ratio with varying parameters')
-ylabel('threshold')
-xlabel('EWMA')
+title('MBBS V.Parity O.Trend Sharpe \lambda and responseScale')
+ylabel('responseScale')
+xlabel('\lambda')
 zlabel('Sharpe Ratio')
-print(f,'Output/MBBS_Sensitivity_SHARPE_QTST', '-dpng', '-r1000')
+print(f,'Output/MBBS_Sensitivity_SHARPE_LU', '-dpng', '-r1000')
 
+%plot the result in a surface for calmar 
 f = figure('visible', 'on');
 surf(X, Y, MBBS_Sensitivity.CR_2)
-title('MBBS RP Calmar Ratio with varying parameters')
-ylabel('threshold')
-xlabel('EWMA')
+title('MBBS V.Parity O.Trend Calmar \lambda and responseScale')
+ylabel('responseScale')
+xlabel('\lambda')
 zlabel('Calmar Ratio')
-print(f,'Output/MBBS_Sensitivity_Calmar_QTST', '-dpng', '-r1000')
+print(f,'Output/MBBS_Sensitivity_Calmar_LU', '-dpng', '-r1000')
 
-clear trend qt f short st X Y position pos
+clear trend qt f U st X Y position pos

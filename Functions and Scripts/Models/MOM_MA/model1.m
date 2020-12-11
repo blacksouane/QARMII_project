@@ -158,7 +158,7 @@ f = zeros(1,A); %Vector having each first available return
 
 % Here we compute the choice of the user using the value given by : 
 % switch case
-if strcmp(signal,'Binary') && strcmp(scheme,'VP')
+if strcmp(signal,'Binary') && strcmp(scheme,'VP') % Momentum252, and volatility parity 
     
     
     for time = M+1:21:T  %We rebalance every month starting after the first
@@ -181,13 +181,20 @@ if strcmp(signal,'Binary') && strcmp(scheme,'VP')
         W_l = S(position,Ind).*W(position, Ind);
         C_l = cov(toCompute);
         l(position) = target / (sqrt(W_l*C_l*W_l.')*sqrt(252));
-    
+        
+        % Indicating where is the allocation 
+        if mod(position,10) == 0 
+           fprintf('Allocation %d over %d has been performed !\n',position, length(M+1:21:T));
+        elseif position == 1
+            disp('Optimisation is starting\n')
+        end
+        
         % Next rebalancing
         position = position + 1;
     end
 
     
-elseif strcmp(signal,'Binary') && strcmp(scheme,'RP')
+elseif strcmp(signal,'Binary') && strcmp(scheme,'RP') % Momentum252, and Risk parity
     
         MCR = zeros(round((T - M)/21, 0), A);
         CORR = zeros(round((T - M)/21, 0), 1);
@@ -215,18 +222,21 @@ elseif strcmp(signal,'Binary') && strcmp(scheme,'RP')
         C_l = cov(toCompute);
         l(position) = target / (sqrt(W_l*C_l*W_l.')*sqrt(252));
         
-        if mod(position,1) == 0 
-           fprintf('Allocation %d over %d has been performed !\n',position, 260);
+        % Indicating where is the allocation
+        if mod(position,10) == 0 
+           fprintf('Allocation %d over %d has been performed !\n',position, length(M+1:21:T));
         elseif position == 1
             disp('Optimisation is starting\n')
         end
+        
+        % Next Rebalancing 
         position = position + 1;
     end
     
         varargout{1} = MCR;
         varargout{2} = CORR;
         
-elseif strcmp(signal,'Binary') && strcmp(scheme,'EW')
+elseif strcmp(signal,'Binary') && strcmp(scheme,'EW') % Momentum252, and Equally weighted
     
      for time = M+1:21:T
         
@@ -248,12 +258,19 @@ elseif strcmp(signal,'Binary') && strcmp(scheme,'EW')
         W_l = S(position,Ind).*W(position, Ind);
         C_l = cov(toCompute);
         l(position) = target / (sqrt(W_l*C_l*W_l.')*sqrt(252));
-    
+        
+        % Indicating where is the allocation
+        if mod(position,10) == 0 
+           fprintf('Allocation %d over %d has been performed !\n',position, length(M+1:21:T));
+        elseif position == 1
+            disp('Optimisation is starting\n')
+        end
+        
         % Next rebalancing
         position = position + 1;
     end
     
-elseif strcmp(signal,'MA') && strcmp(scheme,'VP')
+elseif strcmp(signal,'MA') && strcmp(scheme,'VP') % Moving average, and volatility parity
     
     for time = M+1:21:T
         
@@ -275,11 +292,18 @@ elseif strcmp(signal,'MA') && strcmp(scheme,'VP')
         C_l = cov(toCompute);
         l(position) = target / (sqrt(W_l*C_l*W_l.')*sqrt(252));
     
+        % Indicating where is the allocation
+        if mod(position,10) == 0 
+           fprintf('Allocation %d over %d has been performed !\n',position, 260);
+        elseif position == 1
+            disp('Optimisation is starting\n')
+        end
+        
         % Next rebalancing
         position = position + 1;
     end
 
-elseif strcmp(signal,'MA') && strcmp(scheme,'RP')
+elseif strcmp(signal,'MA') && strcmp(scheme,'RP') % Moving average, and Risk parity
 
         MCR = zeros(round((T - M)/21, 0), A);
         
@@ -305,18 +329,20 @@ elseif strcmp(signal,'MA') && strcmp(scheme,'RP')
         C_l = cov(toCompute);
         l(position) = target / (sqrt(W_l*C_l*W_l.')*sqrt(252));
     
-        % Next rebalancing
-        if mod(position,100) == 0 
-           fprintf('Allocation %d over %d has been performed !\n',position, 260);
+        % Indicate where the allocation is 
+        if mod(position,10) == 0 
+           fprintf('Allocation %d over %d has been performed !\n',position, length(M+1:21:T));
         elseif position == 1
             disp('Optimisation is starting\n')
         end
+        
+        % Next rebalancing
         position = position + 1;
     end
     
         varargout{1} = MCR;
         
-elseif strcmp(signal,'MA') && strcmp(scheme,'EW')
+elseif strcmp(signal,'MA') && strcmp(scheme,'EW') % Moving average, and equally weighted
     
     for time = M+1:21:T
         
@@ -338,11 +364,18 @@ elseif strcmp(signal,'MA') && strcmp(scheme,'EW')
         C_l = cov(toCompute);
         l(position) = target / (sqrt(W_l*C_l*W_l.')*sqrt(252));
     
+        % Indicate where the allocation is 
+        if mod(position,10) == 0 
+           fprintf('Allocation %d over %d has been performed !\n',position, length(M+1:21:T));
+        elseif position == 1
+            disp('Optimisation is starting\n')
+        end
+        
         % Next rebalancing
         position = position + 1;
     end
     
-elseif strcmp(signal,'MomJump') && strcmp(scheme,'VP')
+elseif strcmp(signal,'MomJump') && strcmp(scheme,'VP') % Momentum with last 3 months signal and vol. parity 
     
     
     for time = M+1:21:T  %We rebalance every month starting after the first
@@ -366,12 +399,19 @@ elseif strcmp(signal,'MomJump') && strcmp(scheme,'VP')
         C_l = cov(toCompute);
         l(position) = target / (sqrt(W_l*C_l*W_l.')*sqrt(252));
     
+        % Indicate where the allocation is 
+        if mod(position,10) == 0 
+           fprintf('Allocation %d over %d has been performed !\n',position, length(M+1:21:T));
+        elseif position == 1
+            disp('Optimisation is starting\n')
+        end
+        
         % Next rebalancing
         position = position + 1;
     end
 
     
-elseif strcmp(signal,'MomJump') && strcmp(scheme,'RP')
+elseif strcmp(signal,'MomJump') && strcmp(scheme,'RP') % Momentum with last 3 months signal and Risk parity 
     
         MCR = zeros(round((T - M)/21, 0), A);
         
@@ -398,17 +438,20 @@ elseif strcmp(signal,'MomJump') && strcmp(scheme,'RP')
         C_l = cov(toCompute);
         l(position) = target / (sqrt(W_l*C_l*W_l.')*sqrt(252));
         
-        if mod(position,100) == 0 
-           fprintf('Allocation %d over %d is has been performed !\n',position, 367);
+        % Indicate where the allocation is 
+        if mod(position,10) == 0 
+           fprintf('Allocation %d over %d has been performed !\n',position, length(M+1:21:T));
         elseif position == 1
             disp('Optimisation is starting\n')
         end
+        
+        % Next rebalancing
         position = position + 1;
     end
     
         varargout{1} = MCR;
     
-elseif strcmp(signal,'MomJump') && strcmp(scheme,'EW')
+elseif strcmp(signal,'MomJump') && strcmp(scheme,'EW') % Momentum with last 3 months signal and equally weighted 
     
      for time = M+1:21:T
         
@@ -430,6 +473,13 @@ elseif strcmp(signal,'MomJump') && strcmp(scheme,'EW')
         C_l = cov(toCompute);
         l(position) = target / (sqrt(W_l*C_l*W_l.')*sqrt(252));
     
+        % Indicate where the allocation is 
+        if mod(position,10) == 0 
+           fprintf('Allocation %d over %d has been performed !\n',position, length(M+1:21:T));
+        elseif position == 1
+            disp('Optimisation is starting\n')
+        end
+        
         % Next rebalancing
         position = position + 1;
     end

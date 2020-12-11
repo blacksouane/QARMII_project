@@ -14,8 +14,8 @@ addpath(genpath(pwd));
 addpath(genpath('Kevin Sheppard Toolbox'))
 clear RESTOREDEFAULTPATH_EXECUTED
 MomLength = 252;
-ImportData;
-DataProcessing;
+ImportData; % this script import all the required data
+DataProcessing; % this script adjusts the currency, compute return
 
 disp('####################################################################');
 disp('-------------------------- Model 1 ---------------------------------');
@@ -24,25 +24,27 @@ disp('####################################################################');
 
 disp('*************************** MOMEMTUM 252 DAYS **************************')
 % Vol. Parity
-MOM252VP.Momentum = MomLength;
-MOM252VP.Vola = 180;
-MOM252VP.T = 0.1;
+MOM252VP.Momentum = MomLength; % we set the momentum window
+MOM252VP.Vola = 180; % day to compute the the covariance matrix
+MOM252VP.T = 0.1; % volatility target 10% here 
+% the function take different variable argument signal and weight scheme
+% here we peform the strategy of momentum with volatility parity. 
 [MOM252VP.W, MOM252VP.S, MOM252VP.L] = model1(data.daily, MOM252VP.Momentum,...
-    MOM252VP.Vola, MOM252VP.T, 'signal','Binary','weight','VP');
-MOM252VP.NW = MOM252VP.W.*MOM252VP.S;
+    MOM252VP.Vola, MOM252VP.T, 'signal','Binary','weight','VP'); % get the weight the signal and leverage
+MOM252VP.NW = MOM252VP.W.*MOM252VP.S; % compute the net weight 
 [MOM252VP.R,MOM252VP.CumR,MOM252VP.Stats] = PortfolioStatistics(data.monthly,...
-    MOM252VP.NW,MOM252VP.L,0.001);
+    MOM252VP.NW,MOM252VP.L,0.001); % compute the return of the strategy using previous computation
 [MOM252VP.CorrelationAnalysis] = SharpeCorrelation(MOM252VP.R, data.monthly, 36,...
-    [0 ,0.1, 0.2], data.classNum);
+    [0 ,0.1, 0.2], data.classNum); % correlation analysis and sharpe for different correlation regime
 [MOM252VP.FACTOR, MOM252VP.AFACTOR] = factoranalysis(MOM252VP.R,data.fffactor.monthly, data.rf.monthly,...
-    data.AF.monthly.r);
+    data.AF.monthly.r); % we perform a factor analysis and for different type of index
 
 % Equal Weighted
 MOM252EW.Momentum = MomLength;
 MOM252EW.Vola = 180;
 MOM252EW.T = 0.1;
 [MOM252EW.W, MOM252EW.S, MOM252EW.L] = model1(data.daily, MOM252EW.Momentum,...
-    MOM252EW.Vola, MOM252EW.T, 'signal','Binary','weight','EW');
+    MOM252EW.Vola, MOM252EW.T, 'signal','Binary','weight','EW'); % change the weighting scheme, here equally weighted 
 MOM252EW.NW = MOM252EW.W.*MOM252EW.S;
 [MOM252EW.R,MOM252EW.CumR,MOM252EW.Stats] = PortfolioStatistics(data.monthly,...
     MOM252EW.NW,MOM252EW.L,0.001);
@@ -56,7 +58,7 @@ MOM252RP.Momentum = MomLength;
 MOM252RP.Vola = 180;
 MOM252RP.T = 0.1;
 [MOM252RP.W, MOM252RP.S, MOM252RP.L,MOM252RP.MCR] = model1(data.daily, MOM252RP.Momentum,...
-    MOM252RP.Vola, MOM252RP.T, 'signal','Binary','weight','RP');
+    MOM252RP.Vola, MOM252RP.T, 'signal','Binary','weight','RP'); % we change the weighting scheme use risk parity 
 MOM252RP.NW = MOM252RP.W.*MOM252RP.S;
 [MOM252RP.R,MOM252RP.CumR,MOM252RP.Stats] = PortfolioStatistics(data.monthly,...
     MOM252RP.NW,MOM252RP.L,0.001);
@@ -80,15 +82,15 @@ clear f;
 %% Momemtum 90 days
 
 disp('*************************** MOMEMTUM 90 DAYS **************************\n')
-data.monthly = MonthlyReturns(data.daily, 90, 21);
+data.monthly = MonthlyReturns(data.daily, 90, 21); % recompute the return, as the signal length is smaller we have more allocation
 data.Mdate = Date(data.daily,data.date, 90, 21);
 
 % Vol. Parity
-MOM90VP.Momentum = 90;
-MOM90VP.Vola = 60;
-MOM90VP.T = 0.1;
+MOM90VP.Momentum = 90; % set the new signal length 
+MOM90VP.Vola = 90; % compute the covariance matrix using 60 day 
+MOM90VP.T = 0.1; % volatility target 
 [MOM90VP.W, MOM90VP.S, MOM90VP.L] = model1(data.daily, MOM90VP.Momentum,...
-    MOM90VP.Vola, MOM90VP.T, 'signal','Binary','weight','VP');
+    MOM90VP.Vola, MOM90VP.T, 'signal','Binary','weight','VP'); %same as before only the return change anf the signal length 
 MOM90VP.NW = MOM90VP.W.*MOM90VP.S;
 [MOM90VP.R,MOM90VP.CumR,MOM90VP.Stats] = PortfolioStatistics(data.monthly,...
     MOM90VP.NW,MOM90VP.L,0.001);
@@ -99,10 +101,10 @@ MOM90VP.NW = MOM90VP.W.*MOM90VP.S;
 
 % Equal Weighted
 MOM90EW.Momentum = 90;
-MOM90EW.Vola = 60;
+MOM90EW.Vola = 90;
 MOM90EW.T = 0.1;
 [MOM90EW.W, MOM90EW.S, MOM90EW.L] = model1(data.daily, MOM90EW.Momentum,...
-    MOM90EW.Vola, MOM90EW.T, 'signal','Binary','weight','EW');
+    MOM90EW.Vola, MOM90EW.T, 'signal','Binary','weight','EW'); % change the weigthing scheme
 MOM90EW.NW = MOM90EW.W.*MOM90EW.S;
 [MOM90EW.R,MOM90EW.CumR,MOM90EW.Stats] = PortfolioStatistics(data.monthly,...
     MOM90EW.NW,MOM90EW.L,0.001);
@@ -113,10 +115,10 @@ MOM90EW.NW = MOM90EW.W.*MOM90EW.S;
 
 % Risk. Parity
 MOM90RP.Momentum = 90;
-MOM90RP.Vola = 60;
+MOM90RP.Vola = 90;
 MOM90RP.T = 0.1;
 [MOM90RP.W, MOM90RP.S, MOM90RP.L,MOM90RP.MCR,MOM90RP.CORR] = model1(data.daily, MOM90RP.Momentum,...
-    MOM90RP.Vola, MOM90RP.T, 'signal','Binary','weight','RP');
+    MOM90RP.Vola, MOM90RP.T, 'signal','Binary','weight','RP'); %change the weighting scheme 
 MOM90RP.NW = MOM90RP.W.*MOM90RP.S;
 [MOM90RP.R,MOM90RP.CumR,MOM90RP.Stats] = PortfolioStatistics(data.monthly,...
     MOM90RP.NW,MOM90RP.L,0.001);
@@ -142,15 +144,15 @@ clear f;
 
 disp('*************************** MOMEMTUM JUMP 90 DAYS **************************\n')
 
-data.monthly = MonthlyReturns(data.daily, MomLength, 21);
+data.monthly = MonthlyReturns(data.daily, MomLength, 21); % recompute the return, here use again 252 but based on the end of the window
 data.Mdate = Date(data.daily,data.date ,MomLength, 21);
 
 % Vol. Parity
-MOMJUMPVP.Momentum = MomLength;
-MOMJUMPVP.Vola = 90;
-MOMJUMPVP.T = 0.15;
+MOMJUMPVP.Momentum = MomLength; % length required for the signal
+MOMJUMPVP.Vola = 180; % use the same length as MOM252 for compute the covariance 
+MOMJUMPVP.T = 0.1; % volatility target 
 [MOMJUMPVP.W, MOMJUMPVP.S, MOMJUMPVP.L] = model1(data.daily, MOMJUMPVP.Momentum,...
-    MOMJUMPVP.Vola, MOMJUMPVP.T, 'signal','MomJump','weight','VP');
+    MOMJUMPVP.Vola, MOMJUMPVP.T, 'signal','MomJump','weight','VP'); % change the signal to use the end of the window to get the signal
 MOMJUMPVP.NW = MOMJUMPVP.W.*MOMJUMPVP.S;
 [MOMJUMPVP.R,MOMJUMPVP.CumR,MOMJUMPVP.Stats] = PortfolioStatistics(data.monthly,...
     MOMJUMPVP.NW,MOMJUMPVP.L,0.001);
@@ -161,10 +163,10 @@ MOMJUMPVP.NW = MOMJUMPVP.W.*MOMJUMPVP.S;
 
 % Equal Weighted
 MOMJUMPEW.Momentum = MomLength;
-MOMJUMPEW.Vola = 90;
-MOMJUMPEW.T = 0.15;
+MOMJUMPEW.Vola = 180;
+MOMJUMPEW.T = 0.1;
 [MOMJUMPEW.W, MOMJUMPEW.S, MOMJUMPEW.L] = model1(data.daily, MOMJUMPEW.Momentum,...
-    MOMJUMPEW.Vola, MOMJUMPEW.T, 'signal','MomJump','weight','EW');
+    MOMJUMPEW.Vola, MOMJUMPEW.T, 'signal','MomJump','weight','EW'); % change the weighting scheme
 MOMJUMPEW.NW = MOMJUMPEW.W.*MOMJUMPEW.S;
 [MOMJUMPEW.R,MOMJUMPEW.CumR,MOMJUMPEW.Stats] = PortfolioStatistics(data.monthly,...
     MOMJUMPEW.NW,MOMJUMPEW.L,0.001);
@@ -175,10 +177,10 @@ MOMJUMPEW.NW = MOMJUMPEW.W.*MOMJUMPEW.S;
 
 % Risk. Parity
 MOMJUMPRP.Momentum = MomLength;
-MOMJUMPRP.Vola = 90;
-MOMJUMPRP.T = 0.15;
+MOMJUMPRP.Vola = 180;
+MOMJUMPRP.T = 0.1;
 [MOMJUMPRP.W, MOMJUMPRP.S, MOMJUMPRP.L,MOMJUMPRP.MCR] = model1(data.daily, MOMJUMPRP.Momentum,...
-    MOMJUMPRP.Vola, MOMJUMPRP.T, 'signal','MomJump','weight','RP');
+    MOMJUMPRP.Vola, MOMJUMPRP.T, 'signal','MomJump','weight','RP'); % change the weighting scheme
 MOMJUMPRP.NW = MOMJUMPRP.W.*MOMJUMPRP.S;
 [MOMJUMPRP.R,MOMJUMPRP.CumR,MOMJUMPRP.Stats] = PortfolioStatistics(data.monthly,...
     MOMJUMPRP.NW,MOMJUMPRP.L,0.001);
@@ -201,16 +203,17 @@ print(f,'Output/MOMJUMP', '-dpng', '-r1000')
 clear f;
 
 %% Moving Average
+% this section use a different sinal than the momentum 
 disp('*************************** Moving Average **************************\n')
 
 % Vol. Parity MA
 MAVP.Momentum = MomLength;
 MAVP.Vola = 90;
-MAVP.T = 0.15;
+MAVP.T = 0.1;
 [MAVP.W, MAVP.S, MAVP.L] = model1(data.daily, MAVP.Momentum,...
     MAVP.Vola, MAVP.T, 'signal','MA','weight','VP',...
-    21, 63, 'price', data.p);
-MAVP.NW = MAVP.W.*MAVP.S;
+    21, 63, 'price', data.p); % signal is Moving Average, weighting scheme is vol parity and we use 21d for st MA and 63 LT MA
+MAVP.NW = MAVP.W.*MAVP.S; % net weigth 
 [MAVP.R,MAVP.CumR,MAVP.Stats] = PortfolioStatistics(data.monthly,...
     MAVP.NW,MAVP.L,0.001);
 [MAVP.CorrelationAnalysis] = SharpeCorrelation(MAVP.R, data.monthly, 36,...
@@ -221,10 +224,10 @@ MAVP.NW = MAVP.W.*MAVP.S;
 % Equal Weighted MA
 MAEW.Momentum = MomLength;
 MAEW.Vola = 90;
-MAEW.T = 0.15;
+MAEW.T = 0.1;
 [MAEW.W, MAEW.S, MAEW.L] = model1(data.daily, MAEW.Momentum,...
     MAEW.Vola, MAEW.T, 'signal','MA','weight','EW',...
-    21, 63, 'price', data.p);
+    21, 63, 'price', data.p); % change the weighting scheme 
 MAEW.NW = MAEW.W.*MAEW.S;
 [MAEW.R,MAEW.CumR,MAEW.Stats] = PortfolioStatistics(data.monthly,...
     MAEW.NW,MAEW.L,0.001);
@@ -236,10 +239,10 @@ MAEW.NW = MAEW.W.*MAEW.S;
 % Risk. Parity MA
 MARP.Momentum = MomLength;
 MARP.Vola = 90;
-MARP.T = 0.15;
+MARP.T = 0.1;
 [MARP.W, MARP.S, MARP.L,MARP.MCR] = model1(data.daily, MARP.Momentum,...
     MARP.Vola, MARP.T, 'signal','MA','weight','RP',...
-    21, 63, 'price', data.p);
+    21, 63, 'price', data.p); % change the weighting scheme 
 MARP.NW = MARP.W.*MARP.S; %Weights are already Net
 [MARP.R,MARP.CumR,MARP.Stats] = PortfolioStatistics(data.monthly,...
     MARP.NW,MARP.L,0.001);
@@ -274,79 +277,133 @@ Model1_stats = [renamevars(MOM252VP.Stats,'Var1','MOM252VP'),...
     renamevars(MARP.Stats,'Var1','MARP'),...
     renamevars(MAEW.Stats,'Var1','MAEW')];
 
-
-%All Signal with VP
-
 %% BAZ SIGNAL
-fprintf('*************************** MBBS **************************\n')
-D = [70,300];
-sign = max(D(2),63);
-data.monthly = MonthlyReturns(data.daily, MomLength+sign, 21);
-data.Mdate = Date(data.daily,data.date ,MomLength+sign, 21);
+fprintf('*************************** MBBS **************************')
+% there is better comment in the function modelMBBS
+D = 300; % set the length of the exponentiel moving average 
+sign = max(D,63); % as the signal require at least 63% of price we have to take the max here 300
+data.monthly = MonthlyReturns(data.daily, MomLength+sign, 21); % recompute the return, du to the signal we need 252 EWMA before 
+data.Mdate = Date(data.daily,data.date ,MomLength+sign, 21); % compute the signal this is why we start a Momlength +sign 
 
-disp('*************************** Trend Quantity with leverage  Vol Paritiy **************************\n')
-[MBBSLeverage.W,MBBSLeverage.S,MBBSLeverage.L] = ...
-    modelMBBS(data.p, data.daily, D(1),D(2), 90, 'tradingRule', 'overQuantity','tradingTarget',0.7);
-MBBSLeverage.NW = MBBSLeverage.W.*MBBSLeverage.S;
-[MBBSLeverage.R,MBBSLeverage.CumR,MBBSLeverage.Stats] = PortfolioStatistics(data.monthly,...
-    MBBSLeverage.NW,MBBSLeverage.L,0.001);
-[MBBSLeverage.CorrelationAnalysis] = SharpeCorrelation(MBBSLeverage.R, data.monthly, 36,...
+disp('*************************** MBBS volParity indQuantity **************************')
+[MBBSVPNR.W,MBBSVPNR.S,MBBSVPNR.L] = modelMBBS(data.p, data.daily,D, 90,... % we give the price and daily data, the length of EWMA, 
+    'tradingRule','indQuantity','tradingTarget',0.7,... % length to compute the cov and set some trading rule we have individualy 
+    'weighting','volParity','memory',11); % trend quantity and require 70% of trend, Memory is forgetting factor in the EWMA 
+MBBSVPNR.NW = MBBSVPNR.W.*MBBSVPNR.S; % netweigth
+[MBBSVPNR.R,MBBSVPNR.CumR,MBBSVPNR.Stats] = PortfolioStatistics(data.monthly,...
+    MBBSVPNR.NW,MBBSVPNR.L,0.001);
+[MBBSVPNR.CorrelationAnalysis] = SharpeCorrelation(MBBSVPNR.R, data.monthly, 36,...
     [0 ,0.1, 0.2], data.classNum);
-[MBBSLeverage.FACTOR, MBBSLeverage.AFACTOR] = factoranalysis(MBBSLeverage.R,data.fffactor.monthly, data.rf.monthly,...
+[MBBSVPNR.FACTOR, MBBSVPNR.AFACTOR] = factoranalysis(MBBSVPNR.R,data.fffactor.monthly, data.rf.monthly,...
     data.AF.monthly.r);
 
 
-disp('*************************** Individual Trend Quantity Risk Parity **************************\n')
-[MBBS2.W,MBBS2.S,MBBS2.L] =  modelMBBS(data.p, data.daily, D(1), D(2), 90, 'tradingRule', 'overQuantity',...
-    'weighting', 'riskParity','tradingTarget',0.7);
-MBBS2.NW = MBBS2.W.*MBBS2.S;
-[MBBS2.R,MBBS2.CumR,MBBS2.Stats] = PortfolioStatistics(data.monthly,...
-    MBBS2.NW,MBBS2.L,0.001);
-[MBBS2.CorrelationAnalysis] = SharpeCorrelation(MBBS2.R, data.monthly, 36,...
+disp('*************************** MBBS riskParity noRule  **************************')
+[MBBSRPNR.W,MBBSRPNR.S,MBBSRPNR.L] =  modelMBBS(data.p, data.daily, D, 90, 'tradingRule',... % do risk parity and no trading rule 
+    'noRule','weighting','riskParity','memory',11); 
+MBBSRPNR.NW = MBBSRPNR.W.*MBBSRPNR.S;
+[MBBSRPNR.R,MBBSRPNR.CumR,MBBSRPNR.Stats] = PortfolioStatistics(data.monthly,...
+    MBBSRPNR.NW,MBBSRPNR.L,0.001);
+[MBBSRPNR.CorrelationAnalysis] = SharpeCorrelation(MBBSRPNR.R, data.monthly, 36,...
     [0 ,0.1, 0.2], data.classNum);
-[MBBS2.FACTOR, MBBS2.AFACTOR] = factoranalysis(MBBS2.R,data.fffactor.monthly, data.rf.monthly,...
+[MBBSRPNR.FACTOR, MBBSRPNR.AFACTOR] = factoranalysis(MBBSRPNR.R,data.fffactor.monthly, data.rf.monthly,...
     data.AF.monthly.r);
 
 
-disp('*************************** Signal with leverage ~ Signal Weighted **************************\n')
+disp('*************************** MBBS Signalweighted indQuant  **************************')
+[MBBSEWNR.W,MBBSEWNR.S,MBBSEWNR.L] = modelMBBS(data.p, data.daily, D,90, 'tradingRule','indQuantity',...
+    'tradingTarget',0.7,'weighting','EW','memory',11); % individual trend quantity trading rul of 70% weigthing scheme is EW
+MBBSEWNR.NW = MBBSEWNR.W.*MBBSEWNR.S;
+[MBBSEWNR.R,MBBSEWNR.CumR,MBBSEWNR.Stats] = PortfolioStatistics(data.monthly,...
+    MBBSEWNR.NW,MBBSEWNR.L,0.001);
+[MBBSEWNR.CorrelationAnalysis] = SharpeCorrelation(MBBSEWNR.R, data.monthly, 36,...
+    [0 ,0.1, 0.2], data.classNum);
+[MBBSEWNR.FACTOR, MBBSEWNR.AFACTOR] = factoranalysis(MBBSEWNR.R,data.fffactor.monthly, data.rf.monthly,...
+    data.AF.monthly.r);
+
+
+disp('*************************** MBBS volParity, overQuantity **************************')
+[MBBSVPOQ.W,MBBSVPOQ.S,MBBSVPOQ.L] = ...
+    modelMBBS(data.p, data.daily, D , 90, 'tradingRule', 'overQuantity','tradingTarget',0.7,...
+    'memory',11); % vol parity trading rule overall quantity of trend measure on all asset not individually
+MBBSVPOQ.NW = MBBSVPOQ.W.*MBBSVPOQ.S;
+[MBBSVPOQ.R,MBBSVPOQ.CumR,MBBSVPOQ.Stats] = PortfolioStatistics(data.monthly,...
+    MBBSVPOQ.NW,MBBSVPOQ.L,0.001);
+[MBBSVPOQ.CorrelationAnalysis] = SharpeCorrelation(MBBSVPOQ.R, data.monthly, 36,...
+    [0 ,0.1, 0.2], data.classNum);
+[MBBSVPOQ.FACTOR, MBBSVPOQ.AFACTOR] = factoranalysis(MBBSVPOQ.R,data.fffactor.monthly, data.rf.monthly,...
+    data.AF.monthly.r);
+
+
+disp('*************************** MBBS riskParity overQuanitity **************************')
+[MBBSRPOQ.W,MBBSRPOQ.S,MBBSRPOQ.L] =  modelMBBS(data.p, data.daily, D, 90, 'tradingRule',...
+    'overQuantity','weighting', 'riskParity','tradingTarget',0.7,'memory',11); % risk parity
+MBBSRPOQ.NW = MBBSRPOQ.W.*MBBSRPOQ.S;
+[MBBSRPOQ.R,MBBSRPOQ.CumR,MBBSRPOQ.Stats] = PortfolioStatistics(data.monthly,...
+    MBBSRPOQ.NW,MBBSRPOQ.L,0.001);
+[MBBSRPOQ.CorrelationAnalysis] = SharpeCorrelation(MBBSRPOQ.R, data.monthly, 36,...
+    [0 ,0.1, 0.2], data.classNum);
+[MBBSRPOQ.FACTOR, MBBSRPOQ.AFACTOR] = factoranalysis(MBBSRPOQ.R,data.fffactor.monthly, data.rf.monthly,...
+    data.AF.monthly.r);
+
+
+disp('*************************** MBBS Signalweighted overQuantity **************************')
 % Improved signal and Trend quantity tracking
-[MBBSEW.W,MBBSEW.S,MBBSEW.L] = modelMBBS(data.p, data.daily, D(1),D(2),90, 'tradingRule', 'overQuantity',...
-    'weighting', 'EW','tradingTarget',0.7);
-MBBSEW.NW = MBBSEW.W.*MBBSEW.S;
-[MBBSEW.R,MBBSEW.CumR,MBBSEW.Stats] = PortfolioStatistics(data.monthly,...
-    MBBSEW.NW,MBBSEW.L,0.001);
-[MBBSEW.CorrelationAnalysis] = SharpeCorrelation(MBBSEW.R, data.monthly, 36,...
+[MBBSEWOQ.W,MBBSEWOQ.S,MBBSEWOQ.L] = modelMBBS(data.p, data.daily, D ,90, 'tradingRule',...
+    'overQuantity','weighting', 'EW','tradingTarget',0.7,'memory',11); % equaly weigthed 
+MBBSEWOQ.NW = MBBSEWOQ.W.*MBBSEWOQ.S;
+[MBBSEWOQ.R,MBBSEWOQ.CumR,MBBSEWOQ.Stats] = PortfolioStatistics(data.monthly,...
+    MBBSEWOQ.NW,MBBSEWOQ.L,0.001);
+[MBBSEWOQ.CorrelationAnalysis] = SharpeCorrelation(MBBSEWOQ.R, data.monthly, 36,...
     [0 ,0.1, 0.2], data.classNum);
-[MBBSEW.FACTOR, MBBSEW.AFACTOR] = factoranalysis(MBBSEW.R,data.fffactor.monthly, data.rf.monthly,...
+[MBBSEWOQ.FACTOR, MBBSEWOQ.AFACTOR] = factoranalysis(MBBSEWOQ.R,data.fffactor.monthly, data.rf.monthly,...
     data.AF.monthly.r);
 
 % Plotting the results
 f = figure('visible','on');
-plot(data.Mdate(end-length(MBBS2.CumR)+1:end),MBBS2.CumR,data.Mdate(end-length(MBBS2.CumR)+1:end),MBBSLeverage.CumR...
-    ,data.Mdate(end-length(MBBS2.CumR)+1:end), MBBSEW.CumR);%,data.Mdate(11:end),MBBS3.CumR
-legend('Risk Parity','Volatility Parity','EW Quantity','location',...
+plot(data.Mdate(1:end),MBBSVPNR.CumR,data.Mdate(1:end),MBBSRPNR.CumR...
+    ,data.Mdate(1:end), MBBSEWNR.CumR,data.Mdate(1:end),...
+    MBBSVPOQ.CumR,data.Mdate(1:end), MBBSRPOQ.CumR,...
+    data.Mdate(1:end), MBBSEWOQ.CumR);
+legend('VP indQuant','RP noRule','EW indQuant','VP Overall','RP Overall','EW Overall','location',...
     'northwest');
-title('MBBS Model with trading rule on overall trend')
+title('MBBS Model')
 ylabel('Cumulative return')
 xlabel('date')
 print(f,'Output/MBBS', '-dpng', '-r1000')
 clear f;
 
-MBBS_stats = [renamevars(MBBS2.Stats,'Var1','Vol.Parity Ind.Quantity'),...
-    renamevars(MBBSLeverage.Stats,'Var1','Vol.Parity Quantity'),...
-    renamevars(MBBSEW.Stats,'Var1','EW Quantity')];
-%% SSA
+% summary table 
+MBBS_stats = [renamevars(MBBSVPNR.Stats,'Var1','Vol.Parity indQuant'),...
+    renamevars(MBBSRPNR.Stats,'Var1','R.Parity noRule'),...
+    renamevars(MBBSEWNR.Stats,'Var1','EW indQuant'),...
+    renamevars(MBBSVPOQ.Stats,'Var1','V.Parity O.quantity'),...
+    renamevars(MBBSRPOQ.Stats,'Var1','R.Parity O.Quantity'),...
+    renamevars(MBBSEWOQ.Stats,'Var1','EW O.Quantity')];
 
-SSA.MomLength = 45;
-SSA.LatentDim = 1;
-data.monthly = MonthlyReturns(data.daily,SSA.MomLength, 21);
+% correlation regimes table 
+MBBS_corrregime = [MBBSVPNR.CorrelationAnalysis.SR(2,:);...
+    MBBSVPOQ.CorrelationAnalysis.SR(2,:);... 
+    MBBSRPNR.CorrelationAnalysis.SR(2,:);...
+    MBBSRPOQ.CorrelationAnalysis.SR(2,:);...
+    MBBSEWNR.CorrelationAnalysis.SR(2,:);...
+    MBBSEWOQ.CorrelationAnalysis.SR(2,:)];
+MBBS_corrregime = array2table(MBBS_corrregime,'VariableNames',{'R0','R0.1','R0.2'},...
+    'RowNames',{'MBBSVPIQ','MBBSVPOQ','MBBSRPNR','MBBSRPOQ','MBBSEWIQ','MBBSEWOQ'});
+    
+%% SSA
+% the function SSA_TF works in the same way as modelMBBS, please check the
+% function it self 
+SSA.MomLength = 90; % length of the signal 
+SSA.LatentDim = 30; % how many past day to condisder 
+data.monthly = MonthlyReturns(data.daily,SSA.MomLength, 21); % recompute the return to adjust to the signal length 
 data.Mdate = Date(data.daily,data.date ,SSA.MomLength, 21);
 
 % we use Singular spectrum analysis to extract a signal
-disp('*************************** SSA - Volatility Parity**************************\n')
+disp('*************************** SSA - Volatility Parity**************************')
 % Improved signal and Trend quantity tracking
-[SSA.W,SSA.S,SSA.L] = SSA_TF(data.p, data.daily, SSA.LatentDim,...
-    SSA.MomLength, 'weight', 'volParity', 'tradingRule', 'noRule', 'volTarget', 0.1);
+[SSA.W,SSA.S,SSA.L] = SSA_TF(data.p, data.daily, SSA.LatentDim,... % vol parity without trading rule, vol target is set a 10%
+    SSA.MomLength, 'weight', 'volParity', 'tradingRule', 'noRule', 'volTarget', 0.1); 
 SSA.NW = SSA.W.*SSA.S;
 [SSA.R,SSA.CumR,SSA.Stats] = PortfolioStatistics(data.monthly,...
     SSA.NW(2:end,:),SSA.L(2:end),0.001);
@@ -355,9 +412,9 @@ SSA.NW = SSA.W.*SSA.S;
 [SSA.FACTOR, SSA.AFACTOR] = factoranalysis(SSA.R,data.fffactor.monthly, data.rf.monthly,...
     data.AF.monthly.r);
 
-disp('*************************** SSA - Risk Parity **************************\n')
+disp('*************************** SSA - Risk Parity **************************')
 % Improved signal and Trend quantity tracking
-[SSA_RP.W,SSA_RP.S,SSA_RP.L] = SSA_TF(data.p, data.daily, SSA.LatentDim, ...
+[SSA_RP.W,SSA_RP.S,SSA_RP.L] = SSA_TF(data.p, data.daily, SSA.LatentDim, ... % change the weigthing scheme use risk parity 
     SSA.MomLength, 'weight', 'riskParity', 'tradingRule', 'noRule', 'volTarget', 0.1,...
     'ssaScale', 1);
 SSA_RP.NW = SSA_RP.W.*SSA_RP.S;
@@ -368,9 +425,9 @@ SSA_RP.NW = SSA_RP.W.*SSA_RP.S;
 [SSA_RP.FACTOR, SSA_RP.AFACTOR] = factoranalysis(SSA_RP.R,data.fffactor.monthly, data.rf.monthly,...
     data.AF.monthly.r);
 
-disp('*************************** SSA - EW **************************\n')
+disp('*************************** SSA - EW **************************')
 % Improved signal and Trend quantity tracking
-[SSA_EW.W,SSA_EW.S,SSA_EW.L] = SSA_TF(data.p, data.daily, SSA.LatentDim, ...
+[SSA_EW.W,SSA_EW.S,SSA_EW.L] = SSA_TF(data.p, data.daily, SSA.LatentDim, ... % change the weighting scheme use risk parity 
     SSA.MomLength, 'weight', 'EW', 'tradingRule', 'noRule', 'volTarget', 0.1);
 SSA_EW.NW = SSA_EW.W.*SSA_EW.S;
 [SSA_EW.R,SSA_EW.CumR,SSA_EW.Stats] = PortfolioStatistics(data.monthly,...
@@ -380,11 +437,11 @@ SSA_EW.NW = SSA_EW.W.*SSA_EW.S;
 [SSA_EW.FACTOR, SSA_EW.AFACTOR] = factoranalysis(SSA_EW.R,data.fffactor.monthly, data.rf.monthly,...
     data.AF.monthly.r);
 
-disp('*************************** SSA - Quantity **************************\n')
+disp('*************************** SSA - Quantity **************************')
 % Improved signal and Trend quantity tracking
-[SSA_Quantity.W,SSA_Quantity.S,SSA_Quantity.L] = SSA_TF(data.p, data.daily,...
-    SSA.LatentDim, SSA.MomLength,...
-     'weight', 'riskParity', 'tradingRule', 'overQuantity', 'tradingTarget',...
+[SSA_Quantity.W,SSA_Quantity.S,SSA_Quantity.L] = SSA_TF(data.p, data.daily,... % improve signal with trading rule 
+    SSA.LatentDim, SSA.MomLength,... % use trend overall asset, required level of trend is 50%
+     'weight', 'riskParity', 'tradingRule', 'overQuantity', 'tradingTarget',... % we use risk parity 
      0.5,'volTarget', 0.1);
 SSA_Quantity.NW = SSA_Quantity.W.*SSA_Quantity.S;
 [SSA_Quantity.R,SSA_Quantity.CumR,SSA_Quantity.Stats] = PortfolioStatistics(data.monthly,...
@@ -394,10 +451,10 @@ SSA_Quantity.NW = SSA_Quantity.W.*SSA_Quantity.S;
 [SSA_Quantity.FACTOR, SSA_Quantity.AFACTOR] = factoranalysis(SSA_Quantity.R,data.fffactor.monthly, data.rf.monthly,...
     data.AF.monthly.r);
 
-disp('*************************** SSA - Individual Trend Quantity **************************\n')
+disp('*************************** SSA - Individual Trend Quantity **************************')
 % Improved signal and Trend quantity tracking
 [SSA_IndQuantity.W,SSA_IndQuantity.S,SSA_IndQuantity.L] = SSA_TF(data.p, data.daily,...
-    SSA.LatentDim, SSA.MomLength,...
+    SSA.LatentDim, SSA.MomLength,... % here use also risk parity change the trading rule, measure it on asset individually 50% is ask
      'weight', 'riskParity', 'tradingRule', 'indQuantity', 'tradingTarget',...
      0.5,'volTarget', 0.1);
 SSA_IndQuantity.NW = SSA_IndQuantity.W.*SSA_IndQuantity.S;
@@ -426,15 +483,15 @@ clear f;
 
 
 %% Support vector machine
-
-SVM_Model; % Lauching the model
-%data.monthly = MonthlyReturns(data.daily,2274, 21);
-%data.Mdate = Date(data.daily,data.date ,2274, 21);
+% for more details check directly in the script
+SVM_Model; % Lauching the model, the script set the model, split data into a training set and test set and train the model 
+data.monthly = MonthlyReturns(data.daily,SVM_MODEL.day+121, 21); % recompute the return to adjuste to the signal length  train set
+data.Mdate = Date(data.daily,data.date ,SVM_MODEL.day+121, 21); % the 121 come from the SVM_Model script 
 %classificationModel = trainSVM(data, 0.4, 90);
 
 % Volatility Parity
 [SVM_MODEL.W, SVM_MODEL.S, SVM_MODEL.L] = SVM_Strategy(data.daily, 90, SVM_MODEL, data.classNum, 0.2,'VolParity');
-SVM_MODEL.NW = SVM_MODEL.W.*SVM_MODEL.S;
+SVM_MODEL.NW = SVM_MODEL.W.*SVM_MODEL.S; % take the model as impute, vol parity, use 90 days to compute the signal. 
 [SVM_MODEL.R, SVM_MODEL.CumR, SVM_MODEL.Stats] = PortfolioStatistics(data.monthly(end-length(SVM_MODEL.S)+1:end,:),...
     SVM_MODEL.NW,SVM_MODEL.L.',0.001);
 [SVM_MODEL.FACTOR, SVM_MODEL.AFACTOR] = factoranalysis(SVM_MODEL.R,data.fffactor.monthly, data.rf.monthly,...
@@ -444,7 +501,7 @@ SVM_MODEL.NW = SVM_MODEL.W.*SVM_MODEL.S;
 
 % Risk Parity
 [SVM_MODEL_Risk.W, SVM_MODEL_Risk.S, SVM_MODEL_Risk.L] = SVM_Strategy(data.daily, 90, SVM_MODEL, data.classNum, 0.2,'RiskParity');
-SVM_MODEL_Risk.NW = SVM_MODEL_Risk.W.*SVM_MODEL_Risk.S;
+SVM_MODEL_Risk.NW = SVM_MODEL_Risk.W.*SVM_MODEL_Risk.S; % we use risk parity 
 [SVM_MODEL_Risk.R, SVM_MODEL_Risk.CumR, SVM_MODEL_Risk.Stats] = PortfolioStatistics(data.monthly(end-length(SVM_MODEL_Risk.S)+1:end,:),...
     SVM_MODEL_Risk.NW,SVM_MODEL_Risk.L.',0.001);
 [SVM_MODEL_Risk.FACTOR, SVM_MODEL_Risk.AFACTOR] = factoranalysis(SVM_MODEL_Risk.R,data.fffactor.monthly, data.rf.monthly,...
@@ -460,8 +517,9 @@ svmRisk = applySVM(data,'weight', 'riskParity');
 %}
     
 %[svmRisk.R,svmRisk.cumR,svmRisk.Stats] = PortfolioStatistics
+
 % Equally Weighted
-[SVM_MODEL_EW.W, SVM_MODEL_EW.S, SVM_MODEL_EW.L] = SVM_Strategy(data.daily, 90, SVM_MODEL, data.classNum, 0.2,'EW');
+[SVM_MODEL_EW.W, SVM_MODEL_EW.S, SVM_MODEL_EW.L] = SVM_Strategy(data.daily, 90, SVM_MODEL, data.classNum, 0.2,'EW'); % EW scheme
 SVM_MODEL_EW.NW = SVM_MODEL_EW.W.*SVM_MODEL_EW.S;
 [SVM_MODEL_EW.R, SVM_MODEL_EW.CumR, SVM_MODEL_EW.Stats] = PortfolioStatistics(data.monthly(end-length(SVM_MODEL_EW.S)+1:end,:),...
     SVM_MODEL_EW.NW,SVM_MODEL_EW.L.',0.001);
@@ -469,6 +527,7 @@ SVM_MODEL_EW.NW = SVM_MODEL_EW.W.*SVM_MODEL_EW.S;
     data.AF.monthly.r);
 [SVM_MODEL_EW.CorrelationAnalysis] = SharpeCorrelation(SVM_MODEL_EW.R, data.monthly, 36,...
     [0 ,0.1, 0.2], data.classNum);
+
 
 f = figure('visible','on');
 plot(data.Mdate(end-length(SVM_MODEL.CumR):end-1),SVM_MODEL.CumR, ...
@@ -480,8 +539,11 @@ xlabel('date')
 legend('Volatility Parity','Risk Parity','Equally Weighted','location','northwest')
 print(f,'Output/SVM', '-dpng', '-r1000')
 
+%% Sensitivity Analysis & Return decomposition 
 
-%% Sensitivity Analysis
+    % Return Decomposition
+    data.monthly = MonthlyReturns(data.daily, 1, 21);
+    returnDec; % compute the decomposition of the return for every model, every asset classes 
 
     % Sensitivity MBBS
     MBBS__Sensitivity;
@@ -491,7 +553,6 @@ print(f,'Output/SVM', '-dpng', '-r1000')
 
     % Sensitivity SVM
     SVM_Sensitivity;
-
 
 %% Creating tables, GUI and clearing cache
 
@@ -514,101 +575,16 @@ plotSIGNAL(SVM_MODEL_Risk.S, data.classNum,...
     'SVM Signal Decomposition', ...
     data.class)
 
-plotSIGNAL(MBBSEW.S,data.classNum,...
-    data.Mdate(9:end),'Output/MBBS_EW_SignalDecompostion',...
-    'MBBS EW Signal Decomposition', ...
-    data.class)
-
 plotSIGNAL(MOM252VP.S,data.classNum,...
     data.Mdate(9:end),'Output/MOM252_s',...
     'MOM252 Signal Decomposition', ...
     data.class) 
 
-plotSIGNAL(MBBSEW.S,data.classNum,...
-    data.Mdate(9:end),'Output/MBBSEW',...
-    'MBBSEW Signal Decomposition', ...
+plotSIGNAL(MBBSRPOQ.S,data.classNum,...
+    data.Mdate(9:end),'Output/MBBSRPOQSignal',...
+    'MBBSEPOQ Signal Decomposition', ...
     data.class) 
 
 
 % Clear Temporary Variables
-clear height i asset A N position TF 700 x0 y0 width
-
-%% Previous Baz keep track 
-% disp('***************************   Trend Quantity   **************************\n')
-% % Improved signal and Trend quantity tracking
-% [MBBS.W,MBBS.S,MBBS.L] = MODEL_MBBS(data.p, data.daily, 90, 20, 200, 63, 252, 'Quantity', 0.5);
-% MBBS.NW = MBBS.W.*MBBS.S;
-% [MBBS.R,MBBS.CumR,MBBS.Stats] = PortfolioStatistics(data.monthly(end-length(MBBS.W):end-1,:),...
-%     MBBS.NW,MBBS.L,0.001);
-% [MBBS.CorrelationAnalysis] = SharpeCorrelation(MBBS.R, data.monthly, 36,...
-%     [0 ,0.1, 0.2], data.classNum);
-% [MBBS.FACTOR, MBBS.AFACTOR] = factoranalysis(MBBS.R,data.fffactor.monthly, data.rf.monthly,...
-%     data.AF.monthly.r);
-
-% disp('*************************** Trend Quantity with leverage **************************\n')
-% % Improved signal and Trend quantity tracking
-% [MBBSLeverage.W,MBBSLeverage.S,MBBSLeverage.L] = MODEL_MBBS(data.p, data.daily, 90, 20, 200, 63, 252, 'Quantity', 0.5, 0.1);
-% MBBSLeverage.NW = MBBSLeverage.W.*MBBSLeverage.S;
-% [MBBSLeverage.R,MBBSLeverage.CumR,MBBSLeverage.Stats] = PortfolioStatistics(data.monthly(end-length(MBBS.W)+1:end,:),...
-%     MBBSLeverage.NW,MBBSLeverage.L,0.001);
-% [MBBSLeverage.CorrelationAnalysis] = SharpeCorrelation(MBBSLeverage.R, data.monthly, 36,...
-%     [0 ,0.1, 0.2], data.classNum);
-% [MBBSLeverage.FACTOR, MBBSLeverage.AFACTOR] = factoranalysis(MBBSLeverage.R,data.fffactor.monthly, data.rf.monthly,...
-%     data.AF.monthly.r);
-
-% disp('*************************** Forecast **************************\n')
-% % Use of a garch model and simple trading rule to avoid crash
-% [MBBS3.W,MBBS3.S,MBBS3.L,MBBS3.p1] = MODEL_MBBS(data.p, data.daily, 90, 20, 200, 63, 252, 'Forecast', 0.25,RWML); 
-% MBBS3.AR = (1 - MBBS3.p1).*data.rf.monthly(end-length(MBBS3.p1)+1:end).*100;
-% MBBS3.NW = MBBS3.W.*MBBS3.S.*MBBS3.p1;
-% MBBS3.R = MBBSLeverage.L(2:end).*(MBBS.R.*MBBS3.p1(2:end) + data.rf.monthly(end-length(MBBS3.p1)+2:end).*(1 - MBBS3.p1(2:end)));
-% MBBS3.CumR = cumprod(1+MBBS3.R)*100; % OK
-% MBBS3.Sharpe = SharpeRatio(MBBS3.R, 0.01); % OK
-% [MBBS3.FACTOR, MBBS3.AFACTOR] = factoranalysis(MBBS3.R,data.fffactor.monthly, data.rf.monthly,...
-%     data.AF.monthly.r);
-
-% disp('*************************** Individual Trend Quantity **************************\n')
-% % Improved signal and Trend quantity tracking
-% [MBBS2.W,MBBS2.S,MBBS2.L] = MODEL_MBBS(data.p, data.daily, 90, 20, 200, 63, 252, 'IndQuantity', 0.5,0.1);
-% MBBS2.NW = MBBS2.W.*MBBS2.S;
-% [MBBS2.R,MBBS2.CumR,MBBS2.Stats] = PortfolioStatistics(data.monthly(end-length(MBBS.W)+1:end,:),...
-%     MBBS2.NW,MBBS2.L,0.001);
-% [MBBS2.CorrelationAnalysis] = SharpeCorrelation(MBBS2.R, data.monthly, 36,...
-%     [0 ,0.1, 0.2], data.classNum);
-% [MBBS2.FACTOR, MBBS2.AFACTOR] = factoranalysis(MBBS2.R,data.fffactor.monthly, data.rf.monthly,...
-%     data.AF.monthly.r);
-
-% position = 1;
-% srp = zeros (length(110:1:120),2);
-% for D=110:1:120
-% sign = max(D,63);
-% data.monthly = MonthlyReturns(data.daily, MomLength+sign, 21);
-% data.Mdate = Date(data.daily,data.date ,MomLength+sign, 21);
-% if mod(position,1)==0
-%     fprintf('sensitivity %d over %d has been performed !\n',position, length(20:250));
-% end
-% % Improved signal and Trend quantity tracking
-% [MBBS2.W,MBBS2.S,MBBS2.L] =  modelMBBS(data.p, data.daily, D, 90, 'tradingRule', 'noRule', 'weighting', 'riskParity');
-% MBBS2.NW = MBBS2.W.*MBBS2.S;
-% [MBBS2.R,MBBS2.CumR,MBBS2.Stats] = PortfolioStatistics(data.monthly,...
-%     MBBS2.NW,MBBS2.L,0.001);
-% % [MBBS2.R,MBBS2.CumR,MBBS2.Stats] = PortfolioStatistics(data.monthly(end-length(MBBSLeverage.W)+1:end,:),...
-% %     MBBS2.NW,MBBS2.L,0.001);
-% [MBBS2.CorrelationAnalysis] = SharpeCorrelation(MBBS2.R, data.monthly, 36,...
-%     [0 ,0.1, 0.2], data.classNum);
-% [MBBS2.FACTOR, MBBS2.AFACTOR] = factoranalysis(MBBS2.R,data.fffactor.monthly, data.rf.monthly,...
-%     data.AF.monthly.r);
-% srp(position,1) = MBBS2.Stats{'Sharpe Ratio', 'Var1'};
-% srp(position,2) = D;
-% position = position + 1;
-% end 
-% disp('*************************** Signal with leverage ~ Equally Weighted **************************\n')
-% % Improved signal and Trend quantity tracking
-% [MBBSEW.W,MBBSEW.S,MBBSEW.L] = MODEL_MBBS(data.p, data.daily, 90, 20, 200, 63, 252, 'Signal', 0.5,0.1);
-% MBBSEW.NW = MBBSEW.W.*MBBSEW.S;
-% [MBBSEW.R,MBBSEW.CumR,MBBSEW.Stats] = PortfolioStatistics(data.monthly(end-length(MBBS.W)+1:end,:),...
-%     MBBSEW.NW,MBBSEW.L,0.001);
-% [MBBSEW.CorrelationAnalysis] = SharpeCorrelation(MBBSEW.R, data.monthly, 36,...
-%     [0 ,0.1, 0.2], data.classNum);
-% [MBBSEW.FACTOR, MBBSEW.AFACTOR] = factoranalysis(MBBSEW.R,data.fffactor.monthly, data.rf.monthly,...
-%     data.AF.monthly.r);
+clear height i asset A N position TF D f LD m minMax Num P pos pos_2 PP RS s SCALE sign

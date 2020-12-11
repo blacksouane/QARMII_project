@@ -22,8 +22,8 @@ Names = QARMDATAII.Properties.VariableNames;
 data.p = table2array(QARMDATAII(1:end,2:end-3));
 data.names = Names(2:end-3);
 data.date = datetime(table2array(QARMDATAII(1:end,1)));
-data.factor1.p = table2array(QARMDATAII(1:end,end-2:end));
-data.factor1.names = Names(end-2:end);
+% data.factor1.p = table2array(QARMDATAII(1:end,end-2:end));
+% data.factor1.names = Names(end-2:end);
 clear opts
 clear QARMDATAII
 clear Names
@@ -170,4 +170,6 @@ clear opts
 
 data.AF.monthly.r = data.AF.monthly.p(2:end,:)./data.AF.monthly.p(1:end-1,:)-1;
 
-disp('####### Importing the Data is done !#######')
+disp('####################################################################');
+disp('------------------ Importing the Data is Done ! --------------------');
+disp('####################################################################');

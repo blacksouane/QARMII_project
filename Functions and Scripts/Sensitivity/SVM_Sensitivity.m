@@ -16,7 +16,7 @@ yield usanle results.
 %% Parameters 
 
 %Parameters 
-P = 0:0.01:0.25;
+P = 0:0.01:0.40;
 
 %Pre-Allocating
 SVM_MODEL_Risk.Sensivity.SR = zeros(length(P), 1);
