@@ -30,25 +30,26 @@ data.Mdate = Date(data.daily,data.date ,MomLength+sign, 21);
 
 % set the range for the ResponseScale parameter
 RS = 0.5:0.1:1.2; 
-MBBS_Sensitivity.SR = zeros(length(RS),1);
-MBBS_Sensitivity.CR = zeros(length(RS),1);
+MBBS_Sensitivity.SR = zeros(length(RS),1); % Store the sharpe with varying parameter 
+MBBS_Sensitivity.CR = zeros(length(RS),1); % Store the calmar with varying parameter
 
 position = 1;
 for qt = RS 
 
     [MBBS_Sensitivity.W,MBBS_Sensitivity.S,MBBS_Sensitivity.L] = modelMBBS(data.p, data.daily, D, 90,...
         'tradingRule', 'overQuantity','weighting', 'volParity','tradingTarget',0.7,...
-        'responseScale',qt);
-    MBBS_Sensitivity.NW = MBBS_Sensitivity.W.*MBBS_Sensitivity.S;
-    [MBBS_Sensitivity.R,MBBS_Sensitivity.CumR,MBBS_Sensitivity.Stats] = PortfolioStatistics(data.monthly,...
+        'responseScale',qt); % here is the varying parameter qt 
+    MBBS_Sensitivity.NW = MBBS_Sensitivity.W.*MBBS_Sensitivity.S; % compute the net weights
+    [MBBS_Sensitivity.R,MBBS_Sensitivity.CumR,MBBS_Sensitivity.Stats] = PortfolioStatistics(data.monthly,... % compute stats
         MBBS_Sensitivity.NW,MBBS_Sensitivity.L,0.001);
 
-    MBBS_Sensitivity.SR(position, 1) = MBBS_Sensitivity.Stats{'Sharpe Ratio', 'Var1'};
-    MBBS_Sensitivity.CR(position, 1) = MBBS_Sensitivity.Stats{'Calmar Ratio', 'Var1'};
+    MBBS_Sensitivity.SR(position, 1) = MBBS_Sensitivity.Stats{'Sharpe Ratio', 'Var1'}; % store the corresponding sharpe
+    MBBS_Sensitivity.CR(position, 1) = MBBS_Sensitivity.Stats{'Calmar Ratio', 'Var1'}; % store the corresponding Calmar
     %disp(MBBS_Sensitivity.Stats{'Annualized Volatility', 'Var1'});
     position = position + 1;
 end 
 
+%plot the result in term of Sharpe
 f = figure('visible','on');
 plot(RS, MBBS_Sensitivity.SR)
 title('MBBS V.Parity O.Trend Sharpe ratio')
@@ -56,6 +57,7 @@ xlabel('responseScale')
 ylabel('Sharpe Ratio')
 print(f,'Output/MBBS_Sensitivity_Sharpe', '-dpng', '-r1000')
 
+%plot the result in term of Calmar
 f = figure('visible','on');
 plot(RS, MBBS_Sensitivity.CR)
 title('MBBS V.Parity O.Trend Calmar ratio')
@@ -69,22 +71,22 @@ print(f,'Output/MBBS_Sensitivity_Calmar', '-dpng', '-r1000')
 U = 4:12;
 
 % pre-allocating the memory
-MBBS_Sensitivity.SR_ST = zeros(length(U),1);
-MBBS_Sensitivity.CR_ST = zeros(length(U),1);
+MBBS_Sensitivity.SR_ST = zeros(length(U),1); % Store the sharpe with varying parameter 
+MBBS_Sensitivity.CR_ST = zeros(length(U),1); % Store the calmar with varying parameter 
 
 position = 1;
 for st = U 
    
     [MBBS_Sensitivity.W,MBBS_Sensitivity.S,MBBS_Sensitivity.L] = modelMBBS(data.p, data.daily, D, 90,...
         'tradingRule', 'overQuantity', 'weighting', 'volParity','tradingTarget',0.7,...
-        'memory',st);
-    MBBS_Sensitivity.NW = MBBS_Sensitivity.W.*MBBS_Sensitivity.S; % comoute the net weight 
+        'memory',st); % st is the changing forgetting parameter
+    MBBS_Sensitivity.NW = MBBS_Sensitivity.W.*MBBS_Sensitivity.S; % compute the net weight 
     
     % compute the performance
     [MBBS_Sensitivity.R,MBBS_Sensitivity.CumR,MBBS_Sensitivity.Stats] = PortfolioStatistics(data.monthly,...
         MBBS_Sensitivity.NW,MBBS_Sensitivity.L,0.001);
     
-    % store the sharpe and calmar ratio with the new parameter
+    % store the sharpe and calmar ratio with the corresponding parameter
     MBBS_Sensitivity.SR_ST(position, 1) = MBBS_Sensitivity.Stats{'Sharpe Ratio', 'Var1'};
     MBBS_Sensitivity.CR_ST(position, 1) = MBBS_Sensitivity.Stats{'Calmar Ratio', 'Var1'};
     position = position + 1;
@@ -111,8 +113,8 @@ RS = 0.5:0.1:1.2; % set the possible amount of RS
 U = 2:15; % set possible length of moving average 
 
 % pre allocate the memory
-MBBS_Sensitivity.SR_2 = zeros(length(RS),length(U));
-MBBS_Sensitivity.CR_2 = zeros(length(RS),length(U));
+MBBS_Sensitivity.SR_2 = zeros(length(RS),length(U)); %Sharpe 
+MBBS_Sensitivity.CR_2 = zeros(length(RS),length(U)); %Calmar 
 
 %set initial position 
 position = 1;
@@ -129,12 +131,13 @@ for qt = RS % loop for the rescale parameter
         [MBBS_Sensitivity.R,MBBS_Sensitivity.CumR,MBBS_Sensitivity.Stats] = PortfolioStatistics(data.monthly,...
             MBBS_Sensitivity.NW,MBBS_Sensitivity.L,0.001);
         
+        % Store the sharpe and the calmar with the corresponding combination 
         MBBS_Sensitivity.SR_2(position, pos) = MBBS_Sensitivity.Stats{'Sharpe Ratio', 'Var1'};
         MBBS_Sensitivity.CR_2(position, pos) = MBBS_Sensitivity.Stats{'Calmar Ratio', 'Var1'};
         pos = pos + 1;
     end
-    position = position + 1;
-    pos = 1;
+    position = position + 1; % Change the columns, new rescale parameter
+    pos = 1; % reser pos to start again at 1
 end
 
 [X, Y] = meshgrid(U, RS); % require for the surface figure

@@ -1,4 +1,5 @@
 % Converting foreign prices in usd prices by using the forex exchange in the dataset
+data.p(:,9) = data.p(:,9)./100; % adjusted the price of the JPY/USD 
 data.p(:,2) = data.p(:,2).*data.p(:,9); % correct the nikkei position
 data.p(:,4) = data.p(:,4).*data.p(:,8); % correct the eurostoxx position
 data.p(:,5) = data.p(:,5).*data.p(:,7); % correction de SMI position

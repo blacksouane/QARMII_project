@@ -1,10 +1,11 @@
 function [Return,CumulativeReturn,Stat_table] = PortfolioStatistics(GeneralReturn,NetWeights,Leverage, varargin)
+% varargin is for the fee, take into account or not
 
 % Computing the returns of the strategy
-if size(varargin) == 1 
-[CumulativeReturn,Return] = StrategyReturn(Leverage,NetWeights,GeneralReturn, 'fees', 'on',varargin(1));
+if size(varargin) == 1
+    [CumulativeReturn,Return] = StrategyReturn(Leverage,NetWeights,GeneralReturn, 'fees', 'on',varargin(1)); % with fee
 else
-[CumulativeReturn,Return] = StrategyReturn(Leverage,NetWeights,GeneralReturn, 'fees', 'off'); 
+    [CumulativeReturn,Return] = StrategyReturn(Leverage,NetWeights,GeneralReturn, 'fees', 'off'); % without fee
 end
 
 % Computing the turnover
@@ -34,6 +35,7 @@ Skew = skewness(Return);
 % Compute the average normalize HH 
 hh = HH(NetWeights,Leverage);
 
+% create the summary table 
 Stat_table = array2table([Mean;Vol;Kurt;Skew;AverageTurnover;...
     Sharpe;Calmar;MaxDrawDown;hh],'RowNames',{'Annualized Mean','Annualized Volatility',...
     'Kurtosis','Skewness','Average Monthly Turnover','Sharpe Ratio','Calmar Ratio'...

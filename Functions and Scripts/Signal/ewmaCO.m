@@ -104,41 +104,41 @@ parse(baz, P, D, varargin{:});
 
 % 1. Transform value into decay factors
 
-U = baz.Results.memory;
-DF = [U, U*2, U*4 ; U*3, U*6, U*12];
-DF = (DF-1)./DF;
-maxLB = max(baz.Results.PW,D);
+U = baz.Results.memory; % extracting the memory parameter, useful for the sensitivity analysis
+DF = [U, U*2, U*4 ; U*3, U*6, U*12]; % we use multiple of the first memory to set all forgetting factor as in the Paper
+DF = (DF-1)./DF; % compute the lambda
+maxLB = max(baz.Results.PW,D); % as in main need to consider the largest length at least 63 prices 
 
 % 2. Compute EWMA
-delta = zeros(baz.Results.PW,3,A);
-pos = 1;
-for L = 1:3
+delta = zeros(baz.Results.PW,3,A); % we pre-allocate memory for the difference of EWMA
+pos = 1; % initalize the position 
+for L = 1:3 % for each lambda 
     
     % Create movAvg object
     movAvg_1 = dsp.MovingAverage('Method','Exponential weighting',...
-    'ForgettingFactor',DF(1, L));
+    'ForgettingFactor',DF(1, L)); 
     movAvg_2 = dsp.MovingAverage('Method','Exponential weighting',...
     'ForgettingFactor',DF(2, L));
 
     for lookback = maxLB:baz.Results.SW + maxLB
         
         % Vector of EWMA
-        temp_1 = movAvg_1(P(lookback-D+1:lookback, :));
+        temp_1 = movAvg_1(P(lookback-D+1:lookback, :)); % for each available assets
         temp_2 = movAvg_2(P(lookback-D+1:lookback, :));
   
         % Compute delta over the last value
         delta(pos, L, :) = (temp_1(end, :) - temp_2(end, :))./...
-            std(P(lookback-baz.Results.PW+1:lookback,:)); %add a +1
+            std(P(lookback-baz.Results.PW+1:lookback,:)); % we scale the signal with the vola of the last 63 prices
          
         % Compute next
-         pos = pos + 1; 
-    end
-   pos = 1;
+         pos = pos + 1; % next EWMA 
+    end 
+   pos = 1; % reset pos for the next lambda
 end
 
 
 % 3. Create Intermediate signal
-int = delta(end, :, :)./std(delta, 1);
+int = delta(end, :, :)./std(delta, 1); % scale again with the stadard deviation 
 
 % 4. Pass it through activation function
 actFun = @(x) x*exp(- (x^2)/baz.Results.responseExp)/baz.Results.responseScale;
@@ -147,13 +147,12 @@ S_A = zeros(size(int));
 
 for L = 1:3
     for asset = 1:A
-        S_A(L, asset) = actFun(int(L, asset));      
+        S_A(L, asset) = actFun(int(L, asset));  % compute the signal     
     end
 end
 
 % 5. Average it
-S = S_A.'*baz.Results.mix';
+S = S_A.'*baz.Results.mix'; % using the mix parameter, here equally weight 1/3
 S = S';
 
 end
-

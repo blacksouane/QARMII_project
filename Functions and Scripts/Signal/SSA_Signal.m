@@ -29,8 +29,9 @@ addParameter(ssaSignalInput, 'minMax', defaultMinMax, checkMinMax);
 parse(ssaSignalInput, latentDim, priceSerie, trajectoryLength, varargin{:})
 
 %% Parameters
+% find the number of assets 
 [~, A] = size(priceSerie);
-S = zeros(1, A);
+S = zeros(1, A); % signal 
 
 for F = 1:A % Loop for each asset
     
@@ -41,9 +42,9 @@ for F = 1:A % Loop for each asset
     R_X = (R_X - meanR)./stdR;
 
     % Compute the trajectory matrix
-    covX(:) = xcorr(R_X(:), latentDim-1, 'unbiased');
-    C = toeplitz(covX(latentDim:end));    % Estimate Trajectory Matrix
-    [RHO,LAMBDA] = eig(C);               % Matrix of eigenvalues
+    covX(:) = xcorr(R_X(:), latentDim-1, 'unbiased'); % compute the autocovariance in the standardize price different lag
+    C = toeplitz(covX(latentDim:end));    % Estimate Trajectory Matrix based on the autocovariance 
+    [RHO,LAMBDA] = eig(C);               % Matrix of eigenvalues  
     LAMBDA = diag(LAMBDA);               % extract the diagonal elements
     [~,ind]=sort(LAMBDA,'descend');      % sort eigenvalues
     RHO = RHO(:,ind);                    % and eigenvectors
@@ -51,11 +52,11 @@ for F = 1:A % Loop for each asset
     % Reconstruct Components
     Y=zeros(trajectoryLength-latentDim+1,latentDim);
     for m=1:latentDim
-      Y(:,m) = R_X((1:trajectoryLength-latentDim+1)+m-1);
+      Y(:,m) = R_X((1:trajectoryLength-latentDim+1)+m-1); % matrix of lagged prices using the latente dim replic the lagged autocor
     end
 
     PC = Y*RHO;
-    S(1, F) = (PC(end, 1) - PC(1, 1))/PC(end, 1); %Extract trend of the first PC
+    S(1, F) = (PC(end, 1) - PC(1, 1))/PC(end, 1); %Extract trend of the first PC by taking the return
 end
 
 % Rescaling weights

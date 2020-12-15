@@ -125,17 +125,17 @@ for i = 1:A
 end
 
 % Preallocating the memory for output
-W = zeros(round((T - M)/21, 0), A);
-L = ones(round((T - M)/21, 0), 1); 
-S = zeros(round((T - M)/21, 0), A);
+W = zeros(round((T - M)/21, 0), A); % Weights
+L = ones(round((T - M)/21, 0), 1); % Leverage 
+S = zeros(round((T - M)/21, 0), A); % Signal
 
 % Define positon matching
 position = 1; 
 %% Loop Allocation
 
-for t = M+1:21:T
+for t = M+1:21:T % loop for allocation 
     
-    %Displaying position of the allocation
+    %Displaying position of the allocation 20 by 20
     if ssaInput.Results.verbose == 1
         if mod(position, 20) == 0
             fprintf('Allocation %d over %d has been performed !\n',position, round((T-(M+1))/21));
@@ -156,22 +156,23 @@ for t = M+1:21:T
     
     %**********************************************************************
     % Handle Weighting Scheme
-    if strcmp(ssaInput.Results.weight, 'EW')
+    if strcmp(ssaInput.Results.weight, 'EW') % equally weighted
         
         W(position,Ind) = 1/sum(available);
         
-    elseif strcmp(ssaInput.Results.weight, 'riskParity')  
+    elseif strcmp(ssaInput.Results.weight, 'riskParity')  % risk parity 
         
         optiStart = volparity(R_T);
         [W(position, Ind), ~] = riskparity(R_T,  M-1, ssaInput.Results.volTarget, ...
            optiStart, 'vol');
         
-    elseif strcmp(ssaInput.Results.weight, 'volParity')
+    elseif strcmp(ssaInput.Results.weight, 'volParity') % volatility parity 
         
         W(position, Ind) = volparity(R_T);
         
     end
     %*********************************************************************
+    % Handle the trading rule
     
     % Case noRule
     if strcmp(ssaInput.Results.tradingRule, 'noRule')
@@ -182,8 +183,8 @@ for t = M+1:21:T
     elseif strcmp(ssaInput.Results.tradingRule, 'overQuantity')
         
         % Quantity and threshold
-        QT = sum(abs(S(position, :)));
-        TH = sum(available)*ssaInput.Results.tradingTarget;
+        QT = sum(abs(S(position, :))); % compute the total trend 
+        TH = sum(available)*ssaInput.Results.tradingTarget; % define the threshold using inital parameter 
         
         % Displaying number of assets over threshold
         if ssaInput.Results.verbose == 1
@@ -203,7 +204,7 @@ for t = M+1:21:T
             
             else
                 % We don't change the signal
-                S(position, :) = S(position -1, :);
+                S(position, :) = S(position -1, :); % use the previous signal
                 
             end
         end
@@ -212,16 +213,16 @@ for t = M+1:21:T
     else % Individual trend quantity case
         
         % Quantity and threshold
-        TH = ssaInput.Results.tradingTarget;
-        OUT = abs(S(position, :)) > TH;
+        TH = ssaInput.Results.tradingTarget; % threshold 
+        OUT = abs(S(position, :)) > TH; % check which asset satisfy the condition 
         
         if position == 1
             
-            S(position, OUT==0) = abs(S(position, OUT==0));
+            S(position, OUT==0) = abs(S(position, OUT==0)); % tanke abolute signal 
         
         else
             
-            S(position, OUT==0) = S(position-1, OUT==0);
+            S(position, OUT==0) = S(position-1, OUT==0); % take preivous signal 
             
         end
         

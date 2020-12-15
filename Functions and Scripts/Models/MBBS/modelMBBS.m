@@ -18,8 +18,9 @@ R : Return Series of size NXT
 All the other inputs are passed as name/pair arguments:
 
     1. 'memory' : an array of size 2X3 representing 3 pair of short/long
-    term EWMA, they are translated into lambda decay factors N/N-1
-    Default : [8, 16, 32 ; 24, 48, 96]
+    term EWMA, they are translated into lambda decay factors N/N-1, they
+    are the foregetting factor for the EWMA.
+    Default : [8, 16, 32 ; 24, 48, 96] in our based mode
     
     2. 'responseScale' : the signal is passed into a response function
     which is scaled by a number in [0, 1].
@@ -32,14 +33,14 @@ All the other inputs are passed as name/pair arguments:
     choose the mix with an array of size 1X3.
     Default: [1/3, 1/3, 1/3]
 
-    5. 'priceWindow' : Signal is scaled by the realized volatility over the
+    5. 'priceWindow' : Signal is scaled by the realized volatility compute over the
     price window.
     Default: 63
 
 
-    6. 'shortWindow' : Signal is scaled by its realized volatility.
-    Default: 252
-
+    6. 'shortWindow' : Signal is scaled by its realized volatility of intermediary step.
+    Default: 252, we need to compute the 252 intermediary before having a
+    signal. 
 
     7. 'weighting' : a string in representing the weighting scheme.
     Accepted value are : {'volParity' (default), 'riskParity', 'EW'}.
@@ -162,7 +163,7 @@ for i = 1:A
 end
 
 % Define number of need value to start computing the signal
-M = baz.Results.SW + max(D2, baz.Results.PW); 
+M = baz.Results.SW + max(D2, baz.Results.PW); % same as in main 
 
 % Preallocating the memory
 W = zeros(round((T - M)/21, 0), A);
@@ -173,7 +174,7 @@ posIdx = 1;
 disp('Starting the backtest !')
 %% Performing the allocation
 
-for time = M+1:21:T
+for time = M+1:21:T % loop for the whole allocation
     
     %Displaying position of the allocation
     if mod(posIdx, 20) == 0
@@ -189,17 +190,17 @@ for time = M+1:21:T
     
     %**********************************************************************
     % Handle Weighting Scheme
-    if strcmp(baz.Results.weighting, 'EW')
+    if strcmp(baz.Results.weighting, 'EW') % equally weighted 
         
         W(posIdx,iDx) = 1/sum(f <= time - M);
         
-    elseif strcmp(baz.Results.weighting, 'riskParity')
+    elseif strcmp(baz.Results.weighting, 'riskParity') % risk parity
         
         optiStart = volparity(R_T);
         [W(posIdx, iDx), ~] = riskparity(R_T,  n-1, baz.Results.volTarget, ...
             optiStart, 'vol');
         
-    elseif strcmp(baz.Results.weighting, 'volParity')
+    elseif strcmp(baz.Results.weighting, 'volParity') % vol parity 
         
         W(posIdx, iDx) = volparity(R_T);
         
@@ -207,6 +208,9 @@ for time = M+1:21:T
     
     %*********************************************************************
     % Handling Signal
+    % we can specify the response scale and the forgetting factor to
+    % compute the signal, response scale is directly in the last scaling
+    % function detail in the report
     S(posIdx, iDx) = ewmaCO(P_T,D2,'responseScale',baz.Results.responseScale,'memory',baz.Results.memory);
     
     
@@ -214,8 +218,8 @@ for time = M+1:21:T
     % Handling trading rule
     if strcmp(baz.Results.tradingRule, 'overQuantity')
         % Quantity and threshold
-        QT = sum(abs(S(posIdx, :)));
-        TH = sum(f <= time - M)*baz.Results.tradingTarget;
+        QT = sum(abs(S(posIdx, :))); % quantity of trend in all assets together
+        TH = sum(f <= time - M)*baz.Results.tradingTarget; % check if the actual qty of trend is bigger than what is required
         % Applying the rule
         if QT <= TH
             if posIdx == 1
@@ -223,26 +227,26 @@ for time = M+1:21:T
                 S(posIdx, :) = 1;
             else
                 % We don't change the signal
-                S(posIdx, :) = S(posIdx -1, :);
+                S(posIdx, :) = S(posIdx -1, :); % use the previous signal if there is not enough trend 
             end
         end
-    elseif strcmp(baz.Results.tradingRule, 'indQuantity')
+    elseif strcmp(baz.Results.tradingRule, 'indQuantity') % each asset trend individually no compensation 
         % Quantity and threshold
         TH = baz.Results.tradingTarget;
-        OUT = abs(S(posIdx, :)) > TH;
+        OUT = abs(S(posIdx, :)) > TH; %check if there are enougth trade in each asset compare to required level 
         if posIdx == 1
             S(posIdx, OUT==0) = abs(S(posIdx, OUT==0));
         else
-            S(posIdx, OUT==0) = S(posIdx-1, OUT==0);
+            S(posIdx, OUT==0) = S(posIdx-1, OUT==0); % use previous signal if there is not enough trend 
         end
     end
     %*********************************************************************
     % Handling Constant Vol.
-    W_T = W(posIdx, iDx).*S(posIdx, iDx);
+    W_T = W(posIdx, iDx).*S(posIdx, iDx); %compute the net weight 
     L(posIdx) = baz.Results.volTarget/...
-        (sqrt(W_T*cov(R_T)*W_T.')*sqrt(252));
+        (sqrt(W_T*cov(R_T)*W_T.')*sqrt(252)); % compute the leverage using the volaility target 
     
-    % Next
+    % Next rebalancing 
     posIdx = posIdx + 1;
 end
 end

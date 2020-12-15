@@ -16,7 +16,7 @@ for i = 1:length(R)
     end
 end
 
-decRet = sum(D, 1)/sum(S) ;
+decRet = sum(D, 1)/sum(S);
 temp = D >= 0;
 decNeg = sum(temp, 1)/size(temp,1);
 end

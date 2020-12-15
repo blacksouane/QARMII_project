@@ -33,7 +33,7 @@ for PP = P
     SENSI_Risk.NW = SENSI_Risk.W.*SENSI_Risk.S;
     [SENSI_Risk.R, SENSI_Risk.CumR, SENSI_Risk.Stats] =...
         PortfolioStatistics(data.monthly(end-length(SENSI_Risk.S)+1:end,:),...
-    SENSI_Risk.NW,SENSI_Risk.L.',0.001);
+    SENSI_Risk.NW,SENSI_Risk.L,0.001);
     
     % Extracting Stats
     SVM_MODEL_Risk.Sensivity.SR(Num, 1) = SENSI_Risk.Stats{'Sharpe Ratio', 'Var1'};

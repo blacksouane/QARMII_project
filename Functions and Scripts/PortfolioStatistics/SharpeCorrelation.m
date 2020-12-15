@@ -1,17 +1,21 @@
 function [MODEL] = SharpeCorrelation(Returns,Price,Window, Regime, Class)
 
 
-% Parameters
+% Size
 [N,~] = size(Returns);
+
+% Pre-allocate the memory
 MODEL.C = zeros(N-Window+1,1);
 MODEL.C_Inter = zeros(N-Window+1,1);
 MODEL.C_Intra = zeros(N-Window+1,4);
 MODEL.S = zeros(N-Window+1,1);
 
+% Price length adjustement 
 if N ~= length(Price)
     X = length(Price);
     Price = Price(X-N:end,:);
 end
+
 % Loop Rolling Window
 for balancing = Window:N
     
@@ -49,8 +53,8 @@ end
 % Inter Class
 assetClass = zeros(length(Returns), 4);
 for aC = 1:4
-    temp = sum(Price(:, Class == aC),2,'omitnan')/sum(Class==aC);
-    if size(assetClass(:, aC)) == size(temp(1:end))
+    temp = sum(Price(:, Class == aC),2,'omitnan')/sum(Class==aC); % correlation with each class by taking average price of 
+    if size(assetClass(:, aC)) == size(temp(1:end)) % each compoenent in each class
         assetClass(:, aC) = temp(1:end);
     else
         assetClass(:, aC) = temp(2:end);
@@ -68,10 +72,9 @@ end
 for balancing = Window:N
     for aC = 1:4
         % Average Pairwise correlation
-        MODEL.C_Intra(balancing-Window+1,aC) = sum(tril(corrcoef...
+        MODEL.C_Intra(balancing-Window+1,aC) = sum(tril(corrcoef... % Select one class and compute the average correlation 
             (Price(balancing-Window+1:balancing,Class == aC)),-1),'all')...
             /(sum(Class== aC)*(sum(Class== aC)-1)/2);
-        
     end
 end
 
@@ -81,6 +84,8 @@ X=[MODEL.C,MODEL.C_Inter,MODEL.C_Intra];
 
 % fitting the model 
 reg = fitlm(X,MODEL.S);
+
+% create the summary table 
 MODEL.CORR = zeros(2,7);
 MODEL.CORR(1,:) = reg.Coefficients.Estimate;
 MODEL.CORR(2,:) = reg.Coefficients.pValue;

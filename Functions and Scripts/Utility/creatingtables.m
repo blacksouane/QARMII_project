@@ -121,11 +121,14 @@ table2latex(SSA_RP.AFACTOR, 'Output/Tables/SSA_RP_AFACTOR.tex');
 table2latex(SSA_RP.CorrelationAnalysis.CORR, 'Output/Tables/SSA_RP_CORR.tex');
 
 
-% *************************** SSA - Vol with individual quantity trend  *************************** 
+% *************************** SSA - Vol with individual quantity trend  ******************
 table2latex(SSA_EW.Stats, 'Output/Tables/SSA_EW.tex')
 table2latex(SSA_EW.FACTOR, 'Output/Tables/SSA_EW_FACTOR.tex');
 table2latex(SSA_EW.AFACTOR, 'Output/Tables/SSA_EW_AFACTOR.tex');
 table2latex(SSA_RP.CorrelationAnalysis.CORR, 'Output/Tables/SSA_EW_CORR.tex');
+
+% *************************** SSA - Summary table ******************************
+table2latex(rows2vars(SSA_stats), 'Output/Tables/SSA_stats.tex');
 
 %% Support Vector Machine
 
@@ -147,3 +150,7 @@ table2latex(SVM_MODEL_EW.Stats, 'Output/Tables/SVM_MODEL_EW.tex')
 table2latex(SVM_MODEL_EW.FACTOR, 'Output/Tables/SVM_MODEL_EW_FACTOR.tex');
 table2latex(SVM_MODEL_EW.AFACTOR, 'Output/Tables/SVM_MODEL_EW_AFACTOR.tex');
 table2latex(SVM_MODEL_EW.CorrelationAnalysis.CORR, 'Output/Tables/SVM_EW_CORR.tex');
+
+
+% *************************** SVM - Summary table ******************************
+table2latex(rows2vars(SVM_stats), 'Output/Tables/SVM_stats.tex');

@@ -5,9 +5,41 @@
 % Maxime Borel and Benjamin Souane
 % HEC Lausanne 
 % 
+% Date : 17.12.2020
 %==========================================================================
 
-%Importing all the libraries in the directory
+%{
+
+This script execute the entire back-tests for our models. The first section
+is about loading and preprocessing the data. The rest of the model
+implements each strategy section by section.
+
+More formally, each section calls the necessary functions for the model,
+therefore you need to have the entire library loaded up in order for it to
+work. 
+
+Each section should be independant from the other however some slight bugs
+may still happen if you run only one section (you, anyway, need to run the
+first section to load and process the data). 
+
+The model implemented are the following : 
+
+0. Data
+1. Momentum
+2. Momentum, jumping the nine first month
+3. MA 
+4. CTA-momentum based on EWMA crossover
+5. Singular Sprectrum Analysis - SSA
+6. Support Vector Machine - SVM
+7. Sensitivity Analysis
+
+Finally, the last sections create some tables and summary plots.
+
+Enjoy!
+
+%}
+
+%% 0. Importing all the libraries in the directory
 clc;
 clear;
 addpath(genpath(pwd));
@@ -17,11 +49,20 @@ MomLength = 252;
 ImportData; % this script import all the required data
 DataProcessing; % this script adjusts the currency, compute return
 
-disp('####################################################################');
-disp('-------------------------- Model 1 ---------------------------------');
-disp('####################################################################');
-%% Momemtum 252 Days
+%% 1.Momemtum 252 Days
 
+%{
+Implementation of the momentum model, we simply compute the return over N
+previous days (252) in this case and generate a binary signal accordingly.
+
+It is different than the cross-section momentum since we are generating T
+(number of asset) signal that are independant from one another therefore,
+we can be entirely short or entirely long. 
+
+We test the signals with our three weighting schemes and compute the
+covariance matrix on 180 days for the risk based weighting schemes.
+
+%}
 disp('*************************** MOMEMTUM 252 DAYS **************************')
 % Vol. Parity
 MOM252VP.Momentum = MomLength; % we set the momentum window
@@ -74,12 +115,17 @@ plot(data.Mdate, MOM252EW.CumR,data.Mdate,MOM252VP.CumR,data.Mdate,MOM252RP.CumR
 legend('Equal Weighted', 'Volatility Parity','Risk Parity','location',...
     'northwest');
 title('252 days momemtum');
-print(f,'Output/MOM252', '-dpng', '-r1000')
 ylabel('Cumulative return')
 xlabel('date')
+print(f,'Output/MOM252', '-dpng', '-r1000')
 clear f;
 
-%% Momemtum 90 days
+%% 2.Momemtum 90 days
+
+%{
+Same commentary that before but with 90 days for the covariance matrix
+estimation since we are working with 90 days for the momentum.
+%}
 
 disp('*************************** MOMEMTUM 90 DAYS **************************\n')
 data.monthly = MonthlyReturns(data.daily, 90, 21); % recompute the return, as the signal length is smaller we have more allocation
@@ -140,7 +186,16 @@ xlabel('date')
 print(f,'Output/MOM90', '-dpng', '-r1000')
 clear f;
 
-%% Momemtum 90 days JUMP
+%% 2.Momemtum 90 days JUMP
+
+%{
+
+Implementation of the "momentum jump" model. The idea is to compute the
+signal with the 9th to 12th previous month. 
+
+We test the strategy for each weighting scheme.
+
+%}
 
 disp('*************************** MOMEMTUM JUMP 90 DAYS **************************\n')
 
@@ -202,8 +257,14 @@ xlabel('date')
 print(f,'Output/MOMJUMP', '-dpng', '-r1000')
 clear f;
 
-%% Moving Average
-% this section use a different sinal than the momentum 
+%% 3. Moving Average
+
+%{
+
+Implementation of the simple MA crossover algorithm.
+
+%}
+
 disp('*************************** Moving Average **************************\n')
 
 % Vol. Parity MA
@@ -277,7 +338,29 @@ Model1_stats = [renamevars(MOM252VP.Stats,'Var1','MOM252VP'),...
     renamevars(MARP.Stats,'Var1','MARP'),...
     renamevars(MAEW.Stats,'Var1','MAEW')];
 
-%% BAZ SIGNAL
+%% 4.CTA-momentum based on EWMA crossover
+
+%{
+ Implementation of the CTA-Momentum signal based on Baz al.(2015). we backtested several submodels. 
+ it uses 3 difference of ST LT EWMA rescaled to get the signal. 
+ 
+  1. Volatility parity with individual trend trading rule (amount of trend
+     70% of available assets), forgetting factor of 11
+  2. Risk parity with no trading rule, foregeting factor of 11
+  3. Signal weighted with individual trading rule (amount of trend
+     70% of available assets), forgetting factor of 11
+  4. Volatility parity with overall trend trading rule (amount of trend
+     70% of available assets), forgetting factor of 11
+  5. Risk parity with overall trend trading rule (amount of trend
+     70% of available assets), forgetting factor of 11
+  6. Risk parity with overall trend trading rule (amount of trend
+     70% of available assets), forgetting factor of 11
+
+70% and 11 are parameters that gives relatively good performance,
+nevertheless this model is highly sensitive to the parameters, check the
+sensitivty analysis. 
+%}
+
 fprintf('*************************** MBBS **************************')
 % there is better comment in the function modelMBBS
 D = 300; % set the length of the exponentiel moving average 
@@ -391,9 +474,18 @@ MBBS_corrregime = [MBBSVPNR.CorrelationAnalysis.SR(2,:);...
 MBBS_corrregime = array2table(MBBS_corrregime,'VariableNames',{'R0','R0.1','R0.2'},...
     'RowNames',{'MBBSVPIQ','MBBSVPOQ','MBBSRPNR','MBBSRPOQ','MBBSEWIQ','MBBSEWOQ'});
     
-%% SSA
+%% 5.SSA
+
+%{
+
+Implementation of the Singular Spectrum Analysis signal. The signal itself
+is the linear trend of the 1st Principal Component of the
+"auto-correlation" matrix.
+
+%}
+
 % the function SSA_TF works in the same way as modelMBBS, please check the
-% function it self 
+% function itself 
 SSA.MomLength = 90; % length of the signal 
 SSA.LatentDim = 30; % how many past day to condisder 
 data.monthly = MonthlyReturns(data.daily,SSA.MomLength, 21); % recompute the return to adjust to the signal length 
@@ -481,48 +573,82 @@ xlabel('date')
 print(f,'Output/SSA', '-dpng', '-r1000')
 clear f;
 
+% summary table 
+SSA_stats = [renamevars(SSA.Stats,'Var1','Vol.Parity'),...
+    renamevars(SSA_RP.Stats,'Var1','R.Parity'),...
+    renamevars(SSA_EW.Stats,'Var1','EW'),...
+    renamevars(SSA_Quantity.Stats,'Var1','R.Parity O.Quantity'),...
+    renamevars(SSA_IndQuantity.Stats,'Var1','R.Parity I.Quantity')];
+%% 6.Support vector machine
+% for more details see directly in the script
 
-%% Support vector machine
-% for more details check directly in the script
 SVM_Model; % Lauching the model, the script set the model, split data into a training set and test set and train the model 
 data.monthly = MonthlyReturns(data.daily,SVM_MODEL.day+121, 21); % recompute the return to adjuste to the signal length  train set
 data.Mdate = Date(data.daily,data.date ,SVM_MODEL.day+121, 21); % the 121 come from the SVM_Model script 
-%classificationModel = trainSVM(data, 0.4, 90);
 
+disp('*************************** SVM - Volatility Parity NoRule **************************')
+% Volatility Parity
+[SVM_MODELNR.W, SVM_MODELNR.S, SVM_MODELNR.L] = SVM_Strategy(data.daily, 90, SVM_MODEL, data.classNum, 0,'VolParity');
+SVM_MODELNR.NW = SVM_MODELNR.W.*SVM_MODELNR.S; % take the model as impute, vol parity, use 90 days to compute the signal. 
+[SVM_MODELNR.R, SVM_MODELNR.CumR, SVM_MODELNR.Stats] = PortfolioStatistics(data.monthly(end-length(SVM_MODELNR.S)+1:end,:),...
+    SVM_MODELNR.NW,SVM_MODELNR.L,0.001);
+[SVM_MODELNR.FACTOR, SVM_MODELNR.AFACTOR] = factoranalysis(SVM_MODELNR.R,data.fffactor.monthly, data.rf.monthly,...
+    data.AF.monthly.r);
+[SVM_MODELNR.CorrelationAnalysis] = SharpeCorrelation(SVM_MODELNR.R, data.monthly, 36,...
+    [0 ,0.1, 0.2], data.classNum);
+
+disp('*************************** SVM - Risk Parity Norule **************************')
+
+% Risk Parity
+[SVM_MODEL_RiskNR.W, SVM_MODEL_RiskNR.S, SVM_MODEL_RiskNR.L] = SVM_Strategy(data.daily, 90, SVM_MODEL, data.classNum, 0,'RiskParity');
+SVM_MODEL_RiskNR.NW = SVM_MODEL_RiskNR.W.*SVM_MODEL_RiskNR.S; % we use risk parity 
+[SVM_MODEL_RiskNR.R, SVM_MODEL_RiskNR.CumR, SVM_MODEL_RiskNR.Stats] = PortfolioStatistics(data.monthly(end-length(SVM_MODEL_RiskNR.S)+1:end,:),...
+    SVM_MODEL_RiskNR.NW,SVM_MODEL_RiskNR.L,0.001);
+[SVM_MODEL_RiskNR.FACTOR, SVM_MODEL_RiskNR.AFACTOR] = factoranalysis(SVM_MODEL_RiskNR.R,data.fffactor.monthly, data.rf.monthly,...
+    data.AF.monthly.r);
+[SVM_MODEL_RiskNR.CorrelationAnalysis] = SharpeCorrelation(SVM_MODEL_RiskNR.R, data.monthly, 36,...
+    [0 ,0.1, 0.2], data.classNum);
+
+disp('*************************** SVM - EW NoRule **************************')
+% Equally Weighted
+[SVM_MODEL_EWNR.W, SVM_MODEL_EWNR.S, SVM_MODEL_EWNR.L] = SVM_Strategy(data.daily, 90, SVM_MODEL, data.classNum, 0,'EW'); % EW scheme
+SVM_MODEL_EWNR.NW = SVM_MODEL_EWNR.W.*SVM_MODEL_EWNR.S;
+[SVM_MODEL_EWNR.R, SVM_MODEL_EWNR.CumR, SVM_MODEL_EWNR.Stats] = PortfolioStatistics(data.monthly(end-length(SVM_MODEL_EWNR.S)+1:end,:),...
+    SVM_MODEL_EWNR.NW,SVM_MODEL_EWNR.L,0.001);
+[SVM_MODEL_EWNR.FACTOR, SVM_MODEL_EWNR.AFACTOR] = factoranalysis(SVM_MODEL_EWNR.R,data.fffactor.monthly, data.rf.monthly,...
+    data.AF.monthly.r);
+[SVM_MODEL_EWNR.CorrelationAnalysis] = SharpeCorrelation(SVM_MODEL_EWNR.R, data.monthly, 36,...
+    [0 ,0.1, 0.2], data.classNum);
+
+disp('*************************** SVM - Volatility Parity with trading rule **************************')
 % Volatility Parity
 [SVM_MODEL.W, SVM_MODEL.S, SVM_MODEL.L] = SVM_Strategy(data.daily, 90, SVM_MODEL, data.classNum, 0.2,'VolParity');
 SVM_MODEL.NW = SVM_MODEL.W.*SVM_MODEL.S; % take the model as impute, vol parity, use 90 days to compute the signal. 
 [SVM_MODEL.R, SVM_MODEL.CumR, SVM_MODEL.Stats] = PortfolioStatistics(data.monthly(end-length(SVM_MODEL.S)+1:end,:),...
-    SVM_MODEL.NW,SVM_MODEL.L.',0.001);
+    SVM_MODEL.NW,SVM_MODEL.L,0.001);
 [SVM_MODEL.FACTOR, SVM_MODEL.AFACTOR] = factoranalysis(SVM_MODEL.R,data.fffactor.monthly, data.rf.monthly,...
     data.AF.monthly.r);
 [SVM_MODEL.CorrelationAnalysis] = SharpeCorrelation(SVM_MODEL.R, data.monthly, 36,...
     [0 ,0.1, 0.2], data.classNum);
 
+disp('*************************** SVM - Risk Parity with trading rule **************************')
+
 % Risk Parity
 [SVM_MODEL_Risk.W, SVM_MODEL_Risk.S, SVM_MODEL_Risk.L] = SVM_Strategy(data.daily, 90, SVM_MODEL, data.classNum, 0.2,'RiskParity');
 SVM_MODEL_Risk.NW = SVM_MODEL_Risk.W.*SVM_MODEL_Risk.S; % we use risk parity 
 [SVM_MODEL_Risk.R, SVM_MODEL_Risk.CumR, SVM_MODEL_Risk.Stats] = PortfolioStatistics(data.monthly(end-length(SVM_MODEL_Risk.S)+1:end,:),...
-    SVM_MODEL_Risk.NW,SVM_MODEL_Risk.L.',0.001);
+    SVM_MODEL_Risk.NW,SVM_MODEL_Risk.L,0.001);
 [SVM_MODEL_Risk.FACTOR, SVM_MODEL_Risk.AFACTOR] = factoranalysis(SVM_MODEL_Risk.R,data.fffactor.monthly, data.rf.monthly,...
     data.AF.monthly.r);
 [SVM_MODEL_Risk.CorrelationAnalysis] = SharpeCorrelation(SVM_MODEL_Risk.R, data.monthly, 36,...
     [0 ,0.1, 0.2], data.classNum);
 
-
-%{
-svmRisk = applySVM(data,'weight', 'riskParity');
-[svmRisk.R, svmRisk.CumR, svmRisk.Stats] = PortfolioStatistics(data.monthly(end-length(svmRisk.S)+1:end,:),...
-    svmRisk.NW,svmRisk.L,0.001);
-%}
-    
-%[svmRisk.R,svmRisk.cumR,svmRisk.Stats] = PortfolioStatistics
-
+disp('*************************** SVM - EW with trading rule **************************')
 % Equally Weighted
 [SVM_MODEL_EW.W, SVM_MODEL_EW.S, SVM_MODEL_EW.L] = SVM_Strategy(data.daily, 90, SVM_MODEL, data.classNum, 0.2,'EW'); % EW scheme
 SVM_MODEL_EW.NW = SVM_MODEL_EW.W.*SVM_MODEL_EW.S;
 [SVM_MODEL_EW.R, SVM_MODEL_EW.CumR, SVM_MODEL_EW.Stats] = PortfolioStatistics(data.monthly(end-length(SVM_MODEL_EW.S)+1:end,:),...
-    SVM_MODEL_EW.NW,SVM_MODEL_EW.L.',0.001);
+    SVM_MODEL_EW.NW,SVM_MODEL_EW.L,0.001);
 [SVM_MODEL_EW.FACTOR, SVM_MODEL_EW.AFACTOR] = factoranalysis(SVM_MODEL_EW.R,data.fffactor.monthly, data.rf.monthly,...
     data.AF.monthly.r);
 [SVM_MODEL_EW.CorrelationAnalysis] = SharpeCorrelation(SVM_MODEL_EW.R, data.monthly, 36,...
@@ -532,17 +658,30 @@ SVM_MODEL_EW.NW = SVM_MODEL_EW.W.*SVM_MODEL_EW.S;
 f = figure('visible','on');
 plot(data.Mdate(end-length(SVM_MODEL.CumR):end-1),SVM_MODEL.CumR, ...
     data.Mdate(end-length(SVM_MODEL.CumR):end-1),SVM_MODEL_Risk.CumR,...
-    data.Mdate(end-length(SVM_MODEL.CumR):end-1),SVM_MODEL_EW.CumR)
+    data.Mdate(end-length(SVM_MODEL.CumR):end-1),SVM_MODEL_EW.CumR,...
+    data.Mdate(end-length(SVM_MODEL.CumR):end-1),SVM_MODELNR.CumR,...
+    data.Mdate(end-length(SVM_MODEL.CumR):end-1),SVM_MODEL_RiskNR.CumR,...
+    data.Mdate(end-length(SVM_MODEL.CumR):end-1),SVM_MODEL_EWNR.CumR)
 title('Support vector machine Model')
 ylabel('Cumulative return')
 xlabel('date')
-legend('Volatility Parity','Risk Parity','Equally Weighted','location','northwest')
+legend('Volatility Parity TR','Risk Parity TR','Equally Weighted TR',...
+    'Volatility Parity NR','Risk Parity NR','Equally Weighted NR'...
+    ,'location','northwest')
 print(f,'Output/SVM', '-dpng', '-r1000')
+clear f;
 
-%% Sensitivity Analysis & Return decomposition 
+SVM_stats = [renamevars(SVM_MODEL.Stats,'Var1','Vol.Parity'),...
+    renamevars(SVM_MODEL_Risk.Stats,'Var1','R.Parity'),...
+    renamevars(SVM_MODEL_EW.Stats,'Var1','EW'),...
+    renamevars(SVM_MODELNR.Stats,'Var1','Vol.Parity NR'),...
+    renamevars(SVM_MODEL_RiskNR.Stats,'Var1','R.Parity NR'),...
+    renamevars(SVM_MODEL_EWNR.Stats,'Var1','EW NR')];
+%% 7.Sensitivity Analysis & Return decomposition 
 
     % Return Decomposition
     data.monthly = MonthlyReturns(data.daily, 1, 21);
+    data.Mdate = Date(data.daily,data.date ,1, 21); % compute the signal this is why we start a Momlength +sign 
     returnDec; % compute the decomposition of the return for every model, every asset classes 
 
     % Sensitivity MBBS
@@ -554,17 +693,13 @@ print(f,'Output/SVM', '-dpng', '-r1000')
     % Sensitivity SVM
     SVM_Sensitivity;
 
-%% Creating tables, GUI and clearing cache
+%% 8.Creating tables, GUI and clearing variables
 
 % Creating tables
 creatingtables;
-% SG trend index barcaly en plus HFR macro systemic 
-% GUI
-%{
-guiData;
-GUI; % TODO : StartUpFcn -> Data loading before component creation
-%}
 
+
+% Compute signals plot
 plotSIGNAL(SSA_RP.S, data.classNum,...
     data.Mdate,'Output/SSA_RP_SignalDecomposition',...
     'SSA signal decomposition', ...
@@ -585,6 +720,5 @@ plotSIGNAL(MBBSRPOQ.S,data.classNum,...
     'MBBSEPOQ Signal Decomposition', ...
     data.class) 
 
-
 % Clear Temporary Variables
-clear height i asset A N position TF D f LD m minMax Num P pos pos_2 PP RS s SCALE sign
+clear height i asset A N position TF D LD m minMax Num P pos pos_2 PP RS s SCALE sign y0  width
