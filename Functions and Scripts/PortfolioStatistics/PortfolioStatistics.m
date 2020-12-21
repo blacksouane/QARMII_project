@@ -3,7 +3,9 @@ function [Return,CumulativeReturn,Stat_table] = PortfolioStatistics(GeneralRetur
 
 % Computing the returns of the strategy
 if size(varargin) == 1
-    [CumulativeReturn,Return] = StrategyReturn(Leverage,NetWeights,GeneralReturn, 'fees', 'on',varargin(1)); % with fee
+    disp('using fee')
+    disp(varargin(1))
+    [CumulativeReturn,Return] = StrategyReturn(Leverage,NetWeights,GeneralReturn, 'fees', 'on',cell2mat(varargin(1))); % with fee
 else
     [CumulativeReturn,Return] = StrategyReturn(Leverage,NetWeights,GeneralReturn, 'fees', 'off'); % without fee
 end

@@ -86,10 +86,11 @@ X=[MODEL.C,MODEL.C_Inter,MODEL.C_Intra];
 reg = fitlm(X,MODEL.S);
 
 % create the summary table 
-MODEL.CORR = zeros(2,7);
-MODEL.CORR(1,:) = reg.Coefficients.Estimate;
-MODEL.CORR(2,:) = reg.Coefficients.pValue;
-MODEL.CORR = array2table(MODEL.CORR,'VariableNames',{'intercept','All','Equity','Fx','Commo','FI','InClass'},'RowNames',...
+MODEL.CORR = zeros(2,8);
+MODEL.CORR(1,1:7) = reg.Coefficients.Estimate;
+MODEL.CORR(2,1:7) = reg.Coefficients.pValue;
+MODEL.CORR(1, 8) = reg.Rsquared.Ordinary;
+MODEL.CORR = array2table(MODEL.CORR,'VariableNames',{'intercept','All','Equity','Fx','Commo','FI','InClass', '$R^{2}$'},'RowNames',...
     {'Coefficient SR','pValue SR'});
 
 end

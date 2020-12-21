@@ -57,6 +57,7 @@ function table2latex(T, filename)
     fprintf(fileID,'\\begin{table}[H]\n');
     fprintf(fileID,'\\centering\n');
     fprintf(fileID, '\\begin{tabular}{%s}\n', col_spec);
+    fprintf(fileID, '\\hline\hline \n');
     fprintf(fileID, '%s \\\\ \n', col_names);
     fprintf(fileID, '\\hline \n');
     

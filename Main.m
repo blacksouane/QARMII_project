@@ -20,7 +20,9 @@ work.
 
 Each section should be independant from the other however some slight bugs
 may still happen if you run only one section (you, anyway, need to run the
-first section to load and process the data). 
+first section to load and process the data). As performing the MBBS
+sensitivity analysis 1hours the user is requested to input Y/N depending if
+you want to run or not.
 
 The model implemented are the following : 
 
@@ -40,6 +42,7 @@ Enjoy!
 %}
 
 %% 0. Importing all the libraries in the directory
+
 clc;
 clear;
 addpath(genpath(pwd));
@@ -474,7 +477,7 @@ MBBS_corrregime = [MBBSVPNR.CorrelationAnalysis.SR(2,:);...
 MBBS_corrregime = array2table(MBBS_corrregime,'VariableNames',{'R0','R0.1','R0.2'},...
     'RowNames',{'MBBSVPIQ','MBBSVPOQ','MBBSRPNR','MBBSRPOQ','MBBSEWIQ','MBBSEWOQ'});
     
-%% 5.SSA
+%% 5.SSA - Singular Spectrum Analysis 
 
 %{
 
@@ -564,8 +567,8 @@ plot(data.Mdate(end-length(SSA.CumR)+1:end), SSA.CumR,...
     data.Mdate(end-length(SSA.CumR)+1:end), SSA_IndQuantity.CumR, ...
     data.Mdate(end-length(SSA.CumR)+1:end), SSA_RP.CumR,...
     data.Mdate(end-length(SSA.CumR)+1:end), SSA_EW.CumR);
-legend('SSA Volatility Parity','SSA Volatility Parity + Overall Trend',...
-    'SSA Volatility Parity + Individual Trend','SSA Risk Parity'...
+legend('SSA Volatility Parity','SSA Risk Parity + Overall Trend',...
+    'SSA Risk Parity + Individual Trend','SSA Risk Parity'...
     ,'SSA Equal Weighted','location','northwest');
 title('SSA signal at constant volatilty')
 ylabel('Cumulative return')
@@ -579,6 +582,7 @@ SSA_stats = [renamevars(SSA.Stats,'Var1','Vol.Parity'),...
     renamevars(SSA_EW.Stats,'Var1','EW'),...
     renamevars(SSA_Quantity.Stats,'Var1','R.Parity O.Quantity'),...
     renamevars(SSA_IndQuantity.Stats,'Var1','R.Parity I.Quantity')];
+
 %% 6.Support vector machine
 % for more details see directly in the script
 
@@ -684,9 +688,15 @@ SVM_stats = [renamevars(SVM_MODEL.Stats,'Var1','Vol.Parity'),...
     data.Mdate = Date(data.daily,data.date ,1, 21); % compute the signal this is why we start a Momlength +sign 
     returnDec; % compute the decomposition of the return for every model, every asset classes 
 
+    prompt = 'Do you want to perform the Sensitivity analysis for the MBBS model ? Y/N : ';
+    str = input(prompt,'s');
+    if isempty(str)
+        str = 'Y';
+    end
+    if strcmp(str,'Y') == 1
     % Sensitivity MBBS
-    MBBS__Sensitivity;
-
+        MBBS__Sensitivity;
+    end 
     % Sensitivity SSA
     SSA_Sensitivity;
 
@@ -720,5 +730,40 @@ plotSIGNAL(MBBSRPOQ.S,data.classNum,...
     'MBBSEPOQ Signal Decomposition', ...
     data.class) 
 
+% Correlation and Model
+f = figure();
+scatter(SVM_MODEL_Risk.CorrelationAnalysis.C_Inter, SVM_MODEL_Risk.CorrelationAnalysis.S,'filled')
+hold on
+scatter(SSA_RP.CorrelationAnalysis.C_Inter, SSA_RP.CorrelationAnalysis.S,'filled')
+hold on
+scatter(MBBSRPOQ.CorrelationAnalysis.C_Inter, MBBSRPOQ.CorrelationAnalysis.S,'filled')
+lsline
+xlabel('Correlation between asset class')
+ylabel('Sharpe Ratio')
+xlim([0.09 0.7])
+ylim([min(SVM_MODEL_Risk.CorrelationAnalysis.S),max(SVM_MODEL_Risk.CorrelationAnalysis.S)])
+legend('Support Vector Machine', 'Singular Sprectrum Analysis', 'MBBSRPOQ', 'location', 'southoutside', 'orientation', 'horizontal')
+title('Sharpe Ratio and Correlation Regime')
+print(f,'Output/CorrSharpeRP', '-dpng', '-r1000')
+
+
+% Comparative graph
+% begin strategy at the same time 
+T = length(SVM_MODEL_Risk.R); 
+MOM252RP.Scale = 100.*cumprod(1 + MOM252RP.R(end-T+1:end)); % MOM252 
+MBBSRPOQ.Scale = 100.*cumprod(1 + MBBSRPOQ.R(end-T+1:end));% MBBS
+SSA_IndQuantity.Scale = 100.*cumprod(1 + SSA_IndQuantity.R(end-T+1:end)); % SSA
+
+f = figure('visible', 'on');
+plot(data.Mdate(end-length(SVM_MODEL.CumR):end-1), MOM252RP.Scale,...
+    data.Mdate(end-length(SVM_MODEL.CumR):end-1), MBBSRPOQ.Scale,...
+    data.Mdate(end-length(SVM_MODEL.CumR):end-1), SSA_IndQuantity.Scale,...
+    data.Mdate(end-length(SVM_MODEL.CumR):end-1), SVM_MODEL_Risk.CumR)
+xlabel('Date')
+ylabel('Cumulative return')
+title('Comparison of the strategies')
+legend('MOM252','MBBSRPOQ','SSA RP indQuant','SVM RP OQ','location','southoutside','orientation','horizontal')
+print(f,'Output/comparativegraph', '-dpng', '-r1000')
+
 % Clear Temporary Variables
-clear height i asset A N position TF D LD m minMax Num P pos pos_2 PP RS s SCALE sign y0  width
+clear height i asset A N position TF D LD m minMax Num P pos pos_2 PP RS s SCALE sign y0  width f

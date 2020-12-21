@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.apptool" plugin-version="1.0">
-  <configuration build-checksum="1391785047" file="C:\Users\benja\Dropbox\QARMII_project\GUI\trendFollowingGUI.prj" location="C:\Users\benja\Dropbox\QARMII_project\GUI" name="trendFollowingGUI" target="target.mlapps" target-name="Package App">
+  <configuration build-checksum="214999703" file="C:\Users\benja\Dropbox\QARMII_project\GUI\trendFollowingGUI.prj" location="C:\Users\benja\Dropbox\QARMII_project\GUI" name="trendFollowingGUI" target="target.mlapps" target-name="Package App">
     <param.appname>trendFollowingGUI</param.appname>
     <param.authnamewatermark>Benjamin Souane and Maxime Borel</param.authnamewatermark>
     <param.email>benjamin.souane@unil.ch</param.email>
@@ -8,7 +8,7 @@
     <param.icons />
     <param.summary>Backtesting of trend-following strategies with user input.</param.summary>
     <param.description />
-    <param.screenshot>C:\Users\benja\AppData\Local\Temp\tpf6d37860_6ef8_43f4_bf36_e3abc7adbe34.png</param.screenshot>
+    <param.screenshot>C:\Users\benja\AppData\Local\Temp\tp4e0461fc_7885_4540_93ca_87a8a576cbe1.png</param.screenshot>
     <param.version>1.0</param.version>
     <param.products.name />
     <param.products.id />

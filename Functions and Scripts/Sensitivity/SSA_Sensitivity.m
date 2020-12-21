@@ -25,6 +25,10 @@ higher one will take time to return and therefore having massive crash
 whereas a smaller one could miss the trend.
 %}
 %% Parameters and grid 
+disp('####################################################################');
+disp('---------------- Starting the sensitivity for SSA -----------------');
+disp('####################################################################');
+
 SSA.MomLength = 45;
 SSA.LatentDim = 30;
 data.monthly = MonthlyReturns(data.daily,SSA.MomLength, 21);

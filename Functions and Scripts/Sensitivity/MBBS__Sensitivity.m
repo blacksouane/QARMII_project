@@ -20,7 +20,11 @@ lambda is the forgetting factor, it is initially set as a matrix 2 by 3 and
 a multiple of 8. we decide to test for different value from 2 to 15. 
 
 %}
+D = 300; % set the length of the exponentiel moving average 
 %% ResponseScale parameter varying 
+disp('####################################################################');
+disp('---------------- Starting the sensitivity for MBBS -----------------');
+disp('####################################################################');
 
 % recompute the date
 MomLength = 252;
