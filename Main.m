@@ -703,7 +703,7 @@ SVM_stats = [renamevars(SVM_MODEL.Stats,'Var1','Vol.Parity'),...
     % Sensitivity SVM
     SVM_Sensitivity;
 
-%% 8.Creating tables, GUI and clearing variables
+%% 8.Creating tables, plots and clearing variables
 
 % Creating tables
 creatingtables;
